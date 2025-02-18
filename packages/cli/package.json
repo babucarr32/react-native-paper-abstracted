@@ -2,18 +2,30 @@
   "name": "@repo/cli",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "dev": "tsc --watch",
-    "build": "tsc"
+    "dev:watch": "tsc --watch",
+    "build": "tsc",
+    "dev": "node --watch src/index.ts"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@turbo/gen": "^2.4.0",
     "@types/node": "^22.13.0",
+    "concurrently": "^9.1.2",
     "eslint": "^9.20.0",
     "typescript": "5.7.3"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "fs-extra": "^11.3.0",
+    "octokit": "^4.1.2",
+    "ora": "^8.2.0",
+    "picocolors": "^1.1.1",
+    "simple-git": "^3.27.0",
+    "ts-node": "^10.9.2"
   }
 }
