@@ -3,3 +3,4 @@ export const RED = "#F11712";
 export const YELLOW = "#FFFF00";
 export const OWNER = "babucarr32"; // GitHub username
 export const REPO = "react-native-paper"; // Repo name
+export const REPO_CORE = "react-native-paper-abstracted"; // Repo name
