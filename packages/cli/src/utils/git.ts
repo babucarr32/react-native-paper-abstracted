@@ -30,7 +30,7 @@ export const cloneSpecificFolder = async (outDir: string, componentFolderName: s
     fs.mkdirSync(outDir, { recursive: true });
 
     // Handle core components
-    const corePath = path.join(outDir, 'core');
+    const corePath = path.join(outDir);
     if (!fs.existsSync(corePath)) {    
       // Set up temp directory for core
       tempCoreDir = path.join(outDir, '_temp_core');
@@ -75,7 +75,7 @@ export const cloneSpecificFolder = async (outDir: string, componentFolderName: s
 
     // Cleanup and process
     fs.rmSync(tempDir, { recursive: true, force: true });
-    processDirectory(componentDir);
+    processDirectory(componentDir, componentFolderName, outDir);
     
     spinner.succeed('Done');
     return componentDir;

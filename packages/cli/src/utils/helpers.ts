@@ -36,7 +36,7 @@ export const spinner = ora({
   },
 });
 
-const replacePathsInFile = (filePath: string): void => {
+const replacePathsInFile = (filePath: string, componentName: string, outDirInConfig: string): void => {
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
             console.error(`Error reading file ${filePath}:`, err);
@@ -47,20 +47,20 @@ const replacePathsInFile = (filePath: string): void => {
         const regex = /from\s+(['"])(?:\.\.?\/)+([^'"]+)/g;
 
         // Replace matched paths with @component/
-        const result = data.replace(regex, `from '@component/$2`);
+        const result = data.replace(regex, `from '@/${outDirInConfig}/${componentName}/$2`);
 
         // Write the modified content back to the file
         fs.writeFile(filePath, result, 'utf8', (err) => {
-            if (err) {
-                console.error(`Error writing file ${filePath}:`, err);
-            } else {
-                console.log(`Updated paths in ${filePath}`);
-            }
+            // if (err) {
+            //     console.error(`Error writing file ${filePath}:`, err);
+            // } else {
+            //     console.log(`Updated paths in ${filePath}`);
+            // }
         });
     });
 }
 
-export const processDirectory = (directory: string): void => {
+export const processDirectory = (directory: string, componentName: string, outDirInConfig: string): void => {
     fs.readdir(directory, { withFileTypes: true }, (err, files) => {
         if (err) {
             console.error(`Error reading directory ${directory}:`, err);
@@ -72,7 +72,7 @@ export const processDirectory = (directory: string): void => {
 
             if (file.isDirectory()) {
                 // Recursively process subdirectories
-                processDirectory(fullPath);
+                processDirectory(fullPath, componentName, outDirInConfig);
             } else if (
                 file.isFile() && path.extname(file.name) === '.ts'
                 || path.extname(file.name) === '.js'
@@ -80,7 +80,7 @@ export const processDirectory = (directory: string): void => {
                 || path.extname(file.name) === '.tsx'
             ) {
                     // Process only .ts files (or change the extension as needed)
-                    replacePathsInFile(fullPath);
+                    replacePathsInFile(fullPath, componentName, outDirInConfig);
                 }
             });
     });
