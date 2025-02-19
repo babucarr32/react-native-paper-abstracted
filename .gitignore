@@ -38,3 +38,4 @@ yarn-error.log*
 *.pem
 
 packages/cli/components
+packages/core/src/components
