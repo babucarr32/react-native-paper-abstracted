@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fs from 'node:fs';
 import pc from "picocolors"
 import path from 'node:path';
@@ -18,6 +20,7 @@ program.command('add')
     fs.readFile(configPath, "utf-8", async(err, data) => {
       if (err) {
         console.log("rnpaconfig.json not found.")
+        return;
       };
 
       const configuration = JSON.parse(data) as RNPAConfig

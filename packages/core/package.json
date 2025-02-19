@@ -1,5 +1,5 @@
 {
-  "name": "@repo/core",
+  "name": "@react-native-paper-abstracted/core",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -8,8 +8,8 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
+    "@react-native-paper-abstracted/eslint-config": "*",
+    "@react-native-paper-abstracted/typescript-config": "*",
     "@turbo/gen": "^2.4.0",
     "@types/node": "^22.13.0",
     "@types/react": "19.0.8",
