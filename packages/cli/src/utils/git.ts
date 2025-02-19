@@ -21,30 +21,44 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
 
 export const cloneSpecificFolder = async (outDir: string, componentFolderName: string, spinner: any) => {
   let tempDir: string = '';
+  let tempCoreDir: string = '';
+  
   try {
     spinner.start();
     
     // Create the base output directory
     fs.mkdirSync(outDir, { recursive: true });
 
-    // Set up temp directory
+    // Handle core components
+    const corePath = path.join(outDir, 'core');
+    if (!fs.existsSync(corePath)) {    
+      // Set up temp directory for core
+      tempCoreDir = path.join(outDir, '_temp_core');
+      if (fs.existsSync(tempCoreDir)) {
+        fs.rmSync(tempCoreDir, { recursive: true, force: true });
+      }
+      fs.mkdirSync(tempCoreDir);
+
+      // Clone and process core
+      await cloneRepo(REPO_CORE, tempCoreDir, 'packages/core/src');
+      
+      // Move core files to final location
+      fs.mkdirSync(corePath, { recursive: true });
+      await execAsync(
+        `cp -r ${path.join(tempCoreDir, 'packages/core/src')}/* ${corePath}`
+      );
+      
+      // Clean up core temp directory
+      fs.rmSync(tempCoreDir, { recursive: true, force: true });
+    }
+
+    // Handle component
     tempDir = path.join(outDir, '_temp');
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
     fs.mkdirSync(tempDir);
 
-    // Handle core components
-    const corePath = path.join(outDir, 'core');
-    const currentDir = process.cwd();
-
-    if (!fs.existsSync(corePath)) {    
-      fs.mkdirSync(corePath, { recursive: true });
-      await cloneRepo(REPO_CORE, corePath, 'packages/core/src');
-      await execAsync(`cd ${currentDir}`);
-    }
-
-    // Handle component
     await cloneRepo(REPO, tempDir, `src/components/${componentFolderName}`);
     
     // Set up component directory
@@ -67,9 +81,14 @@ export const cloneSpecificFolder = async (outDir: string, componentFolderName: s
     return componentDir;
 
   } catch (error: any) {
+    // Clean up both temp directories if they exist
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
+    if (tempCoreDir) {
+      fs.rmSync(tempCoreDir, { recursive: true, force: true });
+    }
+    
     spinner.fail('Download failed');
     if (error.message.includes('No such file or directory')) {
       console.log(pc.green(`Hint: Probably ${pc.bold(componentFolderName)} is not a valid component name`));
