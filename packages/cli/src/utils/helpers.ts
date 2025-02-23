@@ -36,6 +36,10 @@ export const spinner = ora({
   },
 });
 
+export const initializingSpinner = ora({
+  text: "Initializing...",
+});
+
 const replacePathsInFile = (filePath: string, componentName: string, outDirInConfig: string): void => {
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
@@ -44,10 +48,14 @@ const replacePathsInFile = (filePath: string, componentName: string, outDirInCon
         }
 
         // Regex to match paths starting with ./ or ../
-        const regex = /from\s+(['"])(?:\.\.?\/)+([^'"]+)/g;
-
-        // Replace matched paths with @component/
-        const result = data.replace(regex, `from '@/${outDirInConfig}/${componentName}/$2`);
+        // const regex = /from\s+(['"])(?:\.\.?\/)+([^'"]+)/g;
+        const regex = /from\s+'(\.\.\/\.\.\/)+/g;
+        const result = data.replace(regex, (match) => {
+            // Count the number of '../' occurrences
+            const depth = match.split('../').length - 1;
+            // Create a new path with one less '../'
+            return `from '${'../'.repeat(depth - 1)}`;
+        });
 
         // Write the modified content back to the file
         fs.writeFile(filePath, result, 'utf8', (err) => {
@@ -86,3 +94,13 @@ export const processDirectory = (directory: string, componentName: string, outDi
     });
 }
 
+
+export const handleCreateConfigFile = (configPath: string, outDir: string) => {
+    const data = { outDir };
+    const dataString = JSON.stringify(data, null, 2);
+    try {
+        fs.writeFileSync(configPath, dataString, 'utf8');
+    } catch(err) {
+        console.log(err);
+    };
+}

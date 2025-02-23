@@ -19,10 +19,9 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
   );
 };
 
-export const cloneSpecificFolder = async (outDir: string, componentFolderName: string, spinner: any) => {
-  let tempDir: string = '';
+export const initProject = async (outDir: string, spinner: any) => {
   let tempCoreDir: string = '';
-  
+ 
   try {
     spinner.start();
     
@@ -31,26 +30,45 @@ export const cloneSpecificFolder = async (outDir: string, componentFolderName: s
 
     // Handle core components
     const corePath = path.join(outDir);
-    if (!fs.existsSync(corePath)) {    
-      // Set up temp directory for core
-      tempCoreDir = path.join(outDir, '_temp_core');
-      if (fs.existsSync(tempCoreDir)) {
-        fs.rmSync(tempCoreDir, { recursive: true, force: true });
-      }
-      fs.mkdirSync(tempCoreDir);
 
-      // Clone and process core
-      await cloneRepo(REPO_CORE, tempCoreDir, 'packages/core/src');
-      
-      // Move core files to final location
-      fs.mkdirSync(corePath, { recursive: true });
-      await execAsync(
-        `cp -r ${path.join(tempCoreDir, 'packages/core/src')}/* ${corePath}`
-      );
-      
-      // Clean up core temp directory
+    // Set up temp directory for core
+    tempCoreDir = path.join(outDir, '_temp_core');
+
+    if (fs.existsSync(tempCoreDir)) {
+      fs.rmSync(tempCoreDir, { recursive: true, force: true });
+    };
+
+    fs.mkdirSync(tempCoreDir);
+
+    // Clone and process core
+    await cloneRepo(REPO_CORE, tempCoreDir, 'packages/core/src');
+    
+    // Move core files to final location
+    fs.mkdirSync(corePath, { recursive: true });
+    await execAsync(
+      `cp -r ${path.join(tempCoreDir, 'packages/core/src')}/* ${corePath}`
+    );
+    
+    // Clean up core temp directory
+    fs.rmSync(tempCoreDir, { recursive: true, force: true });
+
+   spinner.succeed('Done');
+  } catch (error: any) {
+   if (tempCoreDir) {
       fs.rmSync(tempCoreDir, { recursive: true, force: true });
     }
+    
+    spinner.fail('Download failed');
+  }
+};
+
+
+export const cloneSpecificFolder = async (outDir: string, componentFolderName: string, spinner: any) => {
+  let tempDir: string = '';  
+  try {
+    spinner.start();   
+    // Create the base output directory
+    fs.mkdirSync(outDir, { recursive: true });
 
     // Handle component
     tempDir = path.join(outDir, '_temp');
@@ -85,10 +103,7 @@ export const cloneSpecificFolder = async (outDir: string, componentFolderName: s
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
-    if (tempCoreDir) {
-      fs.rmSync(tempCoreDir, { recursive: true, force: true });
-    }
-    
+
     spinner.fail('Download failed');
     if (error.message.includes('No such file or directory')) {
       console.log(pc.green(`Hint: Probably ${pc.bold(componentFolderName)} is not a valid component name`));
