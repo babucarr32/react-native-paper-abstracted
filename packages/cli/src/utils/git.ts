@@ -94,7 +94,7 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
     fs.mkdirSync(outDir, { recursive: true });
 
     // Handle component
-    tempDir = path.join("src", "_temp");
+    tempDir = path.join(outDir, "_temp");
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }

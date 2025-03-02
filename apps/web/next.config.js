@@ -13,6 +13,7 @@ const plugins = [];
 const nextConfig = {
   output: "export",
   cleanDistDir: true,
+  images: { unoptimized: true },
   reactStrictMode: true,
   poweredByHeader: false,
   pageExtensions: ["md", "mdx", "tsx", "ts", "jsx", "js"],
