@@ -2,9 +2,13 @@
   "name": "@react-native-paper-abstracted/core",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
+    "fetch:components": "npx tsx ./scripts/fetch-components.ts",
+    "check:diff": "npx tsx ./scripts/check-diff.ts",
+    "build": "tsc scripts/fetch-components.ts",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
@@ -15,9 +19,14 @@
     "@types/react": "19.0.8",
     "@types/react-dom": "19.0.3",
     "eslint": "^9.20.0",
+    "tsx": "^4.19.3",
     "typescript": "5.7.3"
   },
   "dependencies": {
+    "@react-native-paper-abstracted/cli": "*",
+    "@types/diff": "^7.0.1",
+    "colors": "^1.4.0",
+    "diff": "^7.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

@@ -6,16 +6,16 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { OWNER, REPO, REPO_CORE } from "./constants.js";
 
-import { processDirectory } from "./helpers.js";
+import { initializingSpinner, settingUpSpinner, spinner } from "./helpers.js";
 
 const execAsync = promisify(exec);
 
-const cloneRepo = async (repoName: string, targetPath: string, sparsePath: string) => {
+const cloneRepo = async (repoName: string, targetPath: string, sparsePath: string, otherSparsePath = "") => {
   await execAsync(
     `git clone --depth 1 --filter=blob:none --sparse https://github.com/${OWNER}/${repoName}.git ${targetPath}`,
   );
   await execAsync(
-    `cd ${targetPath} && git sparse-checkout set ${sparsePath}`,
+    `cd ${targetPath} && git sparse-checkout set ${sparsePath} ${otherSparsePath}`,
   );
 };
 
@@ -62,49 +62,97 @@ export const initProject = async (outDir: string, spinner: any) => {
   }
 };
 
-export const cloneSpecificFolder = async (outDir: string, componentFolderName: string, spinner: any) => {
-  let tempDir: string = "";
+const removeTestFiles = async (filePath: string) => {
   try {
-    spinner.start();
+    const fileNames = fs.readdirSync(filePath, { encoding: "utf8", recursive: true });
+    for (let fileName of fileNames) {
+      // For some reason fs cannot delete empty __tests__ folder
+      if (fileName.includes("__test__") || fileName.includes("__tests__") && fileName !== "__tests__") {
+        const testFilePath = path.join(filePath, fileName);
+        if (fs.existsSync(testFilePath)) {
+          fs.rmSync(testFilePath, { recursive: true });
+        }
+      }
+    }
+  } catch (err: any) {
+    console.log(pc.red(err));
+  }
+};
+
+const stopSpinners = () => {
+  initializingSpinner.stop();
+  settingUpSpinner.stop();
+  spinner.stop();
+};
+
+export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderPath: string, otherSparses?: string) => {
+  let tempDir: string = "";
+  // return;
+  try {
+    initializingSpinner.start();
     // Create the base output directory
     fs.mkdirSync(outDir, { recursive: true });
 
     // Handle component
-    tempDir = path.join(outDir, "_temp");
+    tempDir = path.join("src", "_temp");
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
     fs.mkdirSync(tempDir);
+    initializingSpinner.succeed();
 
-    await cloneRepo(REPO, tempDir, `src/components/${componentFolderName}`);
+    // Get components
+    spinner.start();
+    await cloneRepo(REPO, tempDir, remoteComponentFolderPath, otherSparses);
+    spinner.succeed("Fetching: Done...");
 
+    settingUpSpinner.start();
     // Set up component directory
-    const componentDir = path.join(outDir, componentFolderName);
-    if (fs.existsSync(componentDir)) {
-      fs.rmSync(componentDir, { recursive: true, force: true });
-    }
+    const componentDir = outDir;
+
+    // if (fs.existsSync(componentDir)) {
+    //   fs.rmSync(componentDir, { recursive: true, force: true });
+    // }
+
     fs.mkdirSync(componentDir, { recursive: true });
 
-    // Copy component files
-    await execAsync(
-      `cp -r ${path.join(tempDir, "src/components", componentFolderName)}/* ${componentDir}`,
-    );
+    // Copy component files from temp folder to actual location
+    if (otherSparses) {
+      const sparses = otherSparses.split(" ");
+      for (const s of [...sparses, remoteComponentFolderPath]) {
+        if (s === outDir) {
+          await execAsync(`cp -r ${path.join(tempDir, s)}/* ${componentDir}`);
+        } else {
+          await execAsync(`cp -r ${path.join(tempDir, s)} ${componentDir}/`);
+        }
+      }
+    } else {
+      await execAsync(
+        `cp -rf ${path.join(tempDir, remoteComponentFolderPath)}/* ${componentDir}/`,
+      );
+    }
 
     // Cleanup and process
     fs.rmSync(tempDir, { recursive: true, force: true });
-    processDirectory(componentDir, componentFolderName, outDir);
 
-    spinner.succeed("Done");
+    // processDirectory(componentDir, remoteComponentFolderPath, outDir);
+
+    removeTestFiles(componentDir);
+    settingUpSpinner.succeed("Setting up: Done...");
     return componentDir;
   } catch (error: any) {
+    // Stop all spinners
+    stopSpinners();
     // Clean up both temp directories if they exist
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
-
-    spinner.fail("Download failed");
     if (error.message.includes("No such file or directory")) {
-      console.log(pc.green(`Hint: Probably ${pc.bold(componentFolderName)} is not a valid component name`));
+      console.log(
+        pc.green(
+          `Hint: Probably ${pc.bold(remoteComponentFolderPath)} or ${pc.bold(outDir)} is not a valid component name`,
+        ),
+      );
     }
     console.error(error.message);
   }

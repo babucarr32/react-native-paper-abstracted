@@ -1,15 +1,12 @@
 import fileSystem, { promises as fs } from "fs";
 import path from "path";
-import { siteUrl } from "./url.js"; // Note the .js extension for the import
 import pc from "picocolors";
 import { Octokit } from "octokit";
-import { OWNER, REPO, REPO_CORE } from "./constants.js";
+import { OWNER, REPO } from "./constants.js";
 import { initializingSpinner } from "./helpers.js";
-import { overrideComponentPrompter, overrideConfigPrompter } from "./prompts.js";
+import { overrideComponentPrompter } from "./prompts.js";
 
 const octokit = new Octokit({ auth: process.env.AUTH_TOKEN });
-
-const handleGetFolderName = (path: string) => path.split("/").pop();
 
 const COMPONENTS_PATH = "src/components";
 
@@ -29,11 +26,6 @@ const handleCreateFile = async (
 const handleCreateFilePath = (basePath: string, relativePath: string) => {
   const contentPath = relativePath.split(COMPONENTS_PATH).pop() || "";
   return path.join(basePath, contentPath);
-  if (relativePath.includes(".")) {
-    const folder = relativePath.split("/").slice(1, -1).join("/");
-    return path.join(basePath, folder);
-  } else {
-  }
 };
 
 const checkRateLimit = async () => {
@@ -79,7 +71,7 @@ const handleSaveToFolder = async (
         fileContent.map(async (data: any) => {
           if (data.type === "dir") {
             const dirPath = path.join(process.cwd(), handleCreateFilePath(outDir, data.path));
-            await fs.mkdir(dpc.cyanirPath, { recursive: true });
+            await fs.mkdir(dirPath, { recursive: true });
             await recurse(data.path);
           } else {
             await recurse(data.path);

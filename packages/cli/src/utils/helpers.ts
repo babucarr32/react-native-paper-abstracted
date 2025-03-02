@@ -39,6 +39,10 @@ export const initializingSpinner = ora({
   text: "Initializing...",
 });
 
+export const settingUpSpinner = ora({
+  text: "Initializing...",
+});
+
 const replacePathsInFile = (filePath: string, componentName: string, outDirInConfig: string): void => {
   fs.readFile(filePath, "utf8", (err, data) => {
     if (err) {
@@ -56,14 +60,14 @@ const replacePathsInFile = (filePath: string, componentName: string, outDirInCon
       return `from '${"../".repeat(depth - 1)}`;
     });
 
-    // Write the modified content back to the file
-    fs.writeFile(filePath, result, "utf8", (err) => {
-      // if (err) {
-      //     console.error(`Error writing file ${filePath}:`, err);
-      // } else {
-      //     console.log(`Updated paths in ${filePath}`);
-      // }
-    });
+    // // Write the modified content back to the file
+    // fs.writeFile(filePath, result, "utf8", (err) => {
+    //   // if (err) {
+    //   //     console.error(`Error writing file ${filePath}:`, err);
+    //   // } else {
+    //   //     console.log(`Updated paths in ${filePath}`);
+    //   // }
+    // });
   });
 };
 
@@ -87,7 +91,7 @@ export const processDirectory = (directory: string, componentName: string, outDi
         || path.extname(file.name) === ".tsx"
       ) {
         // Process only .ts files (or change the extension as needed)
-        replacePathsInFile(fullPath, componentName, outDirInConfig);
+        // replacePathsInFile(fullPath, componentName, outDirInConfig);
       }
     });
   });

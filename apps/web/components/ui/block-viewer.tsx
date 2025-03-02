@@ -102,7 +102,7 @@ function BlockViewerProvider({
         setView,
         style,
         setStyle,
-        resizablePanelRef,
+        resizablePanelRef: resizablePanelRef as any,
         activeFile,
         setActiveFile,
         tree,
@@ -187,7 +187,7 @@ function BlockViewerCode({ code }: { code: string }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex h-12 items-center gap-2 border-b border-zinc-700 bg-zinc-900 px-4 text-sm font-medium">
           <File className="size-4" />
-          {file?.target}
+          {(file as any)?.target}
           <div className="ml-auto flex items-center gap-2">
             <BlockCopyCodeButton />
           </div>
@@ -289,7 +289,7 @@ function BlockCopyCodeButton() {
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
   const file = React.useMemo(() => {
-    return item.files?.find((file) => file.target === activeFile);
+    return item.files?.find((file: any) => file.target === activeFile);
   }, [activeFile, item.files]);
 
   const content = file?.content;
