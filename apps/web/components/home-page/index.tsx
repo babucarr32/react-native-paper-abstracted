@@ -18,7 +18,7 @@ const HomePageContent = () => {
             >
               <p className="text-[150px] font-bold text-center leading-40">React Native Paper Abstracted</p>
             </GradientText>
-            <p className="mt-8 text-[60px] text-center">Install only the components you need</p>
+            <p className="mt-8 text-[40px] text-center">Install only the components you need</p>
           </div>
 
           <div className="w-fit mx-auto">

@@ -7,6 +7,7 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
+    "setup": "npx tsx ./scripts/index.ts",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
@@ -22,6 +23,7 @@
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@react-native-paper-abstracted/ui": "*",
+    "@react-native-paper-abstracted/core": "*",
     "@tailwindcss/postcss": "^4.0.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -39,3 +39,7 @@ yarn-error.log*
 
 packages/cli/components
 packages/core/src/core/components
+
+packages/core/src/__patch__
+packages/core/src/__remote_components__
+apps/web/__components__

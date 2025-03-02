@@ -8,13 +8,13 @@ import {
   MD2LightTheme,
   MD3DarkTheme,
   MD3LightTheme,
-} from './styles/themes';
+} from '../styles/themes';
 import type {
   InternalTheme,
   MD3Theme,
   MD3AndroidColors,
   NavigationTheme,
-} from './types';
+} from '../types';
 
 export const DefaultTheme = MD3LightTheme;
 

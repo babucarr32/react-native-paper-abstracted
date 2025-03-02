@@ -12,7 +12,9 @@ export function useCopyToClipboard({
   const [isCopied, setIsCopied] = React.useState(false);
 
   const copyToClipboard = (value: string) => {
+    console.log("Copy");
     if (typeof window === "undefined" || !navigator.clipboard.writeText) {
+      console.log("returningg");
       return;
     }
 

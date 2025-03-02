@@ -2,8 +2,7 @@ import * as React from 'react';
 
 import MaterialCommunityIcon, {
   IconProps,
-} from './components/MaterialCommunityIcon';
-
+} from '../components/MaterialCommunityIcon';
 
 export type Settings = {
   icon?: ({
