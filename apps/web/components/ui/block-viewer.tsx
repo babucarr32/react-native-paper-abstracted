@@ -40,11 +40,12 @@ import {
   SidebarMenuSub,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 // import { trees } from "@/data";
 import { highlightCode } from "@/libs";
 import { Tree } from "@/scripts";
+import Docs from "../docs";
 // import { Style } from "@/registry/registry-styles";
 
 const V0Button = () => <Button>V0Button</Button>;
@@ -157,11 +158,10 @@ function BlockViewerToolbar() {
       </a>
       <div className="ml-auto hidden items-center gap-2 md:flex">
         <Separator orientation="vertical" className="mx-1 hidden h-4 md:flex" />
-        <div className="flex h-7 items-center gap-1 rounded-md border p-[2px]">
+        <div className="flex items-center gap-1 rounded-xl border p-[2px]">
           <Button
             variant="ghost"
-            className="hidden h-[22px] w-auto gap-1 rounded-sm px-2 md:flex lg:w-auto"
-            size="sm"
+            className="hidden !h-9 w-auto gap-1 !rounded-xl px-2 md:flex lg:w-auto"
             onClick={() => {
               copyToClipboard(`npx rnpa add ${activeComponentName}`);
             }}
@@ -170,13 +170,19 @@ function BlockViewerToolbar() {
             <span className="hidden lg:inline">npx rnpa add {activeComponentName}</span>
           </Button>
         </div>
-        <Button size={"sm"} variant={"outline"} onClick={togglePreview}>
-          Preview
-        </Button>
-        <Separator orientation="vertical" className="mx-1 hidden h-4 xl:flex" />
-        <Button size={"sm"} variant={"outline"}>
-          Docs
-        </Button>
+        <div className="ml-4 flex gap-3">
+          <Button variant={"outline"} onClick={togglePreview} className="h-10 rounded-xl">
+            Preview
+          </Button>
+          <a
+            href={`https://callstack.github.io/react-native-paper/docs/components/${activeComponentName}/`}
+            target="_blank"
+          >
+            <Button size={"sm"} variant={"outline"} className="h-10 rounded-xl cursor-pointer">
+              Docs
+            </Button>
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -227,6 +233,8 @@ function BlockViewerCode({ treeData }: { code: string; treeData: Tree[] }) {
   //   />
   // );
 
+  const currentFilePath = activeFile?.split("__/").pop();
+
   return (
     <div className="mr-[14px] border-r border-b flex overflow-hidden rounded-xl bg-zinc-950 text-white group-data-[view=preview]/block-view-wrapper:hidden md:h-screen">
       <div className="w-[280px]">
@@ -235,7 +243,7 @@ function BlockViewerCode({ treeData }: { code: string; treeData: Tree[] }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex h-12 items-center gap-2 border-b border-zinc-700 bg-zinc-900 px-4 text-sm font-medium">
           <File className="size-4" />
-          {(file as any)?.target}
+          {currentFilePath}
           <div className="ml-auto flex items-center gap-2">
             <BlockCopyCodeButton />
           </div>
@@ -273,7 +281,7 @@ export function BlockViewerFileTree({ treeData }: { treeData: Tree[] }) {
         </SidebarGroupLabel>
         <SidebarGroup className="p-0 overflow-scroll h-screen">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
+            <SidebarMenu className="gap-1.5 mb-14">
               {treeData.map((file, index) => <Tree key={index} item={file} index={1} />)}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -283,10 +291,55 @@ export function BlockViewerFileTree({ treeData }: { treeData: Tree[] }) {
   );
 }
 
+const TSX = () => {
+  return (
+    <svg width="31" height="27" viewBox="0 0 31 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M15.5 15.6875C16.7081 15.6875 17.6875 14.7081 17.6875 13.5C17.6875 12.2919 16.7081 11.3125 15.5 11.3125C14.2919 11.3125 13.3125 12.2919 13.3125 13.5C13.3125 14.7081 14.2919 15.6875 15.5 15.6875Z"
+        fill="#0077C6"
+      />
+      <path
+        d="M29.7188 13.5C29.7188 14.0362 29.4698 14.6385 28.8306 15.2861C28.1868 15.9384 27.2012 16.576 25.8967 17.1351C23.2917 18.2515 19.6167 18.9688 15.5 18.9688C11.3833 18.9688 7.7083 18.2515 5.10327 17.1351C3.79882 16.576 2.81307 15.9384 2.16931 15.2861C1.53019 14.6385 1.28125 14.0362 1.28125 13.5C1.28125 12.9638 1.53019 12.3614 2.16931 11.7139C2.81307 11.0616 3.79882 10.424 5.10327 9.86492C7.7083 8.74849 11.3833 8.03125 15.5 8.03125C19.6167 8.03125 23.2917 8.74849 25.8967 9.86492C27.2012 10.424 28.1868 11.0616 28.8306 11.7139C29.4698 12.3614 29.7188 12.9638 29.7188 13.5Z"
+        stroke="#0077C6"
+      />
+      <path
+        d="M22.6094 25.8139C22.145 26.0819 21.499 26.1674 20.6186 25.9377C19.7318 25.7065 18.6867 25.1717 17.5503 24.3214C15.281 22.6237 12.8223 19.7996 10.764 16.2344C8.70562 12.6693 7.48926 9.12797 7.15361 6.31375C6.98555 4.90452 7.04483 3.73204 7.28786 2.84838C7.52912 1.9711 7.92628 1.45435 8.39067 1.18623C8.85505 0.91813 9.50115 0.832555 10.3815 1.06224C11.2683 1.29361 12.3134 1.8285 13.4497 2.67867C15.7191 4.37646 18.1778 7.20052 20.2362 10.7657C22.2944 14.3308 23.5109 17.8721 23.8464 20.6864C24.0144 22.0956 23.9552 23.2681 23.7121 24.1516C23.4709 25.029 23.0738 25.5457 22.6094 25.8139Z"
+        stroke="#0077C6"
+      />
+      <path
+        d="M8.39067 25.8139C7.92628 25.5457 7.52912 25.029 7.28786 24.1516C7.04483 23.2681 6.98555 22.0956 7.15361 20.6864C7.48926 17.8721 8.70562 14.3308 10.764 10.7657C12.8223 7.20052 15.281 4.37646 17.5503 2.67867C18.6867 1.8285 19.7318 1.29361 20.6186 1.06224C21.499 0.832555 22.145 0.91813 22.6094 1.18623C23.0738 1.45435 23.4709 1.9711 23.7121 2.84838C23.9552 3.73204 24.0144 4.90452 23.8464 6.31375C23.5109 9.12797 22.2944 12.6693 20.2362 16.2344C18.1778 19.7996 15.7191 22.6237 13.4497 24.3214C12.3134 25.1717 11.2683 25.7065 10.3815 25.9377C9.50113 26.1674 8.85505 26.0819 8.39067 25.8139Z"
+        stroke="#0077C6"
+      />
+    </svg>
+  );
+};
+
+const TS = () => {
+  return (
+    <svg width="28" height="19" viewBox="0 0 28 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M23.0608 1.01578C23.9919 1.23239 24.838 1.71992 25.4922 2.41687C25.8527 2.79407 26.1656 3.2139 26.4241 3.66703C26.4362 3.71625 24.7463 4.85156 23.7215 5.48484C23.6843 5.51 23.5366 5.34922 23.3693 5.10203C23.1821 4.78022 22.9163 4.51111 22.5969 4.31984C22.2775 4.12857 21.9148 4.02138 21.5427 4.00828C20.3647 3.92734 19.6057 4.54422 19.6112 5.57562C19.601 5.82902 19.6588 6.08052 19.7785 6.30406C20.0377 6.84 20.519 7.16156 22.0305 7.81672C24.813 9.01438 26.0074 9.80406 26.7446 10.9263C27.1613 11.6353 27.4179 12.4269 27.4965 13.2455C27.5751 14.0642 27.4738 14.8901 27.1996 15.6655C26.8228 16.5158 26.2252 17.2497 25.469 17.7912C24.7127 18.3326 23.8254 18.6617 22.899 18.7444C21.9142 18.8573 20.9193 18.847 19.9371 18.7137C18.4326 18.4665 17.0467 17.7445 15.9821 16.6531C15.5798 16.2001 15.2393 15.6959 14.9693 15.1536C15.0828 15.0691 15.2023 14.9931 15.3269 14.9261C15.4997 14.8277 16.1538 14.4514 16.7707 14.0938L17.8907 13.4375L18.1247 13.7788C18.519 14.3425 19.0208 14.8228 19.6013 15.1919C20.1876 15.5135 20.8517 15.6658 21.5195 15.632C22.1874 15.5982 22.8327 15.3796 23.3835 15.0005C23.6676 14.7235 23.8453 14.3554 23.8852 13.9607C23.9252 13.5659 23.8251 13.1697 23.6022 12.8414C23.3004 12.4094 22.6835 12.0462 20.9302 11.2861C19.5554 10.8225 18.3032 10.0542 17.2673 9.03844C16.7739 8.47621 16.4095 7.81283 16.1998 7.09484C16.0446 6.27692 16.0217 5.4394 16.1319 4.61422C16.3378 3.66467 16.8305 2.80135 17.5434 2.14124C18.2564 1.48114 19.155 1.05616 20.1176 0.923906C21.0977 0.806783 22.0899 0.837754 23.0608 1.01578ZM13.9357 2.63781L13.9477 4.22812H8.88366V18.6087H5.31256V4.23141H0.2485V2.66953C0.235031 2.13465 0.249635 1.59944 0.292249 1.06609C0.310843 1.04094 3.38975 1.02891 7.12272 1.03547L13.916 1.05406L13.9357 2.63781Z"
+        fill="#007ACC"
+      />
+    </svg>
+  );
+};
+
+const FolderIcon = () => {
+  return (
+    <svg width="29" height="23" viewBox="0 0 29 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M26.0781 0.015625H15.9063L13.6094 4.60937H0.8125V22.9844H28.375V0.015625H26.0781ZM26.0781 4.60937H17.1094L18.3125 2.3125H26.0781V4.60937Z"
+        fill="#C09553"
+      />
+    </svg>
+  );
+};
 function Tree({ item, index }: { item: FileTree; index: number }) {
   const { activeFile, setActiveFile } = useBlockViewer();
 
   if (!item.children) {
+    const isTSFile = item.path?.split(".").pop() === "ts";
     return (
       <SidebarMenuItem>
         <SidebarMenuButton
@@ -299,7 +352,7 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
           } as React.CSSProperties}
         >
           <ChevronRight className="invisible" />
-          <File className="h-4 w-4" />
+          {isTSFile ? <TS /> : <TSX />}
           {item.name}
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -320,7 +373,7 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
             } as React.CSSProperties}
           >
             <ChevronRight className="h-4 w-4 transition-transform" />
-            <Folder className="h-4 w-4" />
+            <FolderIcon />
             {item.name}
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -355,10 +408,11 @@ function BlockViewer({
   item,
   tree,
   code,
+  docs,
   treeData,
   highlightedFiles,
   ...props
-}: Pick<BlockViewerContext, "item" | "tree" | "highlightedFiles"> & { code: string; treeData: Tree[] }) {
+}: Pick<BlockViewerContext, "item" | "tree" | "highlightedFiles"> & { code: string; docs: string; treeData: Tree[] }) {
   return (
     <BlockViewerProvider
       item={item}
@@ -367,7 +421,18 @@ function BlockViewer({
       {...props}
     >
       <BlockViewerToolbar />
-      <BlockViewerCode code={code} treeData={treeData} />
+      <Tabs defaultValue="docs" className="">
+        <TabsList className="grid w-[200px] grid-cols-2">
+          <TabsTrigger value="docs">Docs</TabsTrigger>
+          <TabsTrigger value="explorer">Explorer</TabsTrigger>
+        </TabsList>
+        <TabsContent value="docs">
+          <Docs data={docs} />
+        </TabsContent>
+        <TabsContent value="explorer">
+          <BlockViewerCode code={code} treeData={treeData} />
+        </TabsContent>
+      </Tabs>
     </BlockViewerProvider>
   );
 }

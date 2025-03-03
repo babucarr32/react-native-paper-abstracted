@@ -6,10 +6,10 @@ import path from "path";
 
 export const OUT_DIR = "__components__";
 
-export type Tree = {
+export type TreeType = {
   name: string;
   path: string;
-  children?: Tree[];
+  children?: TreeType[];
 };
 
 const isDir = (dir: string) => {
@@ -21,7 +21,7 @@ const isFile = (dir: string) => {
 };
 
 const getDirs = (directory: string) => {
-  const result: Tree[] = [];
+  const result: TreeType[] = [];
   const dirs = fs.readdirSync(directory);
 
   for (let dir of dirs) {
@@ -46,9 +46,9 @@ const getDirs = (directory: string) => {
   return result;
 };
 
-export const generateTree = (outDir: string): Tree[] => {
+export const generateTree = (outDir: string): TreeType[] => {
   let dirs: string[] = [];
-  const tree: Tree[] = [];
+  const tree: TreeType[] = [];
 
   if (fs.lstatSync(outDir).isDirectory()) {
     dirs = fs.readdirSync(outDir);
