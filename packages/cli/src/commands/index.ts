@@ -6,6 +6,7 @@ import { init } from "../commands/init.js";
 export const program = new Command();
 
 program.command("init")
+  .description("Setup the project to be compatible with React Native Paper Abstracted")
   .action(init);
 
 program.command("add")
