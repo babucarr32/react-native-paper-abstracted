@@ -53,6 +53,7 @@ const FadeContent = ({
 const DynamicIntros = () => {
   const texts = [
     "Install only the components you need.",
+    "Keep your app light weight.",
     "Customize everything to match your design.",
     "Build faster with reusable UI patterns.",
   ];
