@@ -420,11 +420,21 @@ function BlockViewer({
       highlightedFiles={highlightedFiles}
       {...props}
     >
-      <BlockViewerToolbar />
-      <Tabs defaultValue="docs" className="">
-        <TabsList className="grid w-[200px] grid-cols-2">
-          <TabsTrigger value="docs">Docs</TabsTrigger>
-          <TabsTrigger value="explorer">Explorer</TabsTrigger>
+      <Tabs defaultValue="docs" className="bg-transparent">
+        <TabsList className="flex w-full  bg-transparent gap-3">
+          <TabsTrigger value="docs" asChild>
+            <Button variant={"outline"} className="w-[100px]">
+              Docs
+            </Button>
+          </TabsTrigger>
+          <TabsTrigger value="explorer" asChild>
+            <Button variant={"outline"} className="w-[100px]">
+              Explorer
+            </Button>
+          </TabsTrigger>
+          <div className="flex-1 flex justify-end">
+            <BlockViewerToolbar />
+          </div>
         </TabsList>
         <TabsContent value="docs">
           <Docs data={docs} />

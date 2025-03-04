@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${geistSans.variable} ${geistMono.variable} text-[15px]`}>
         <ThemeProvider
           enableSystem
           attribute="class"
