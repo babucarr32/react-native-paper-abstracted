@@ -27,6 +27,9 @@ const options = {
 plugins.push(
   nextMDX({
     extension: /\.(md|mdx)$/,
+    // experimental: {
+    //   mdRs: true,
+    // },
     options: {
       remarkPlugins: [],
       rehypePlugins: [[rehypePrettyCode, options], rehypeSlug],
