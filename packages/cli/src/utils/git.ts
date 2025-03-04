@@ -15,7 +15,7 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
     `git clone --depth 1 --filter=blob:none --sparse https://github.com/${OWNER}/${repoName}.git ${targetPath}`,
   );
   await execAsync(
-    `cd ${targetPath} && git sparse-checkout set ${sparsePath} ${otherSparsePath}`,
+    `cd ${targetPath} && git sparse-checkout set ${sparsePath} ${otherSparsePath} --skip-checks`,
   );
 };
 
@@ -41,12 +41,26 @@ export const initProject = async (outDir: string, spinner: any) => {
     fs.mkdirSync(tempCoreDir);
 
     // Clone and process core
-    await cloneRepo(REPO_CORE, tempCoreDir, "packages/core/src");
+    await cloneRepo(
+      REPO_CORE,
+      tempCoreDir,
+      "packages/core/src/core",
+      "packages/core/src/styles packages/core/src/utils packages/core/src/types.tsx",
+    );
 
     // Move core files to final location
     fs.mkdirSync(corePath, { recursive: true });
     await execAsync(
-      `cp -r ${path.join(tempCoreDir, "packages/core/src")}/* ${corePath}`,
+      `cp -r ${path.join(tempCoreDir, "packages/core/src/core")} ${corePath}`,
+    );
+    await execAsync(
+      `cp -r ${path.join(tempCoreDir, "packages/core/src/styles")} ${corePath}`,
+    );
+    await execAsync(
+      `cp -r ${path.join(tempCoreDir, "packages/core/src/utils")} ${corePath}`,
+    );
+    await execAsync(
+      `cp ${path.join(tempCoreDir, "packages/core/src/types.tsx")} ${corePath}`,
     );
 
     // Clean up core temp directory
@@ -57,6 +71,7 @@ export const initProject = async (outDir: string, spinner: any) => {
     if (tempCoreDir) {
       fs.rmSync(tempCoreDir, { recursive: true, force: true });
     }
+    console.log(error);
 
     spinner.fail("Download failed");
   }
@@ -123,7 +138,11 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
         if (s === outDir) {
           await execAsync(`cp -r ${path.join(tempDir, s)}/* ${componentDir}`);
         } else {
-          await execAsync(`cp -r ${path.join(tempDir, s)} ${componentDir}/`);
+          if (s.includes(".")) {
+            await execAsync(`cp ${path.join(tempDir, s)} ${componentDir}/`);
+          } else {
+            await execAsync(`cp -r ${path.join(tempDir, s)} ${componentDir}/`);
+          }
         }
       }
     } else {

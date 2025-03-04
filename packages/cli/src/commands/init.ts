@@ -26,6 +26,7 @@ export const init = async () => {
       const createConfigFile = await createConfigPrompter();
       if (createConfigFile) {
         const { configOutDir: outDir, importAlias } = await prompter();
+        componentOutDir = outDir;
         handleCreateConfigFile(configPath, outDir);
       }
     }

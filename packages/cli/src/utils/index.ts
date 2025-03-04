@@ -12,10 +12,8 @@ const COMPONENTS_PATH = "src/components";
 
 const handleCreateFile = async (
   decodedContent: string,
-  fileName: string,
-  folderPath: string,
+  filePath: string,
 ) => {
-  const filePath = path.join(folderPath, fileName);
   const uint8ArrayContent = new Uint8Array(decodedContent.length);
   for (let i = 0; i < decodedContent.length; i++) {
     uint8ArrayContent[i] = decodedContent.charCodeAt(i);
@@ -80,12 +78,17 @@ const handleSaveToFolder = async (
       );
     } else {
       processedCount++;
-      const folderPath = path.join(process.cwd(), handleCreateFilePath(outDir, fileContent.path));
-      await fs.mkdir(folderPath, { recursive: true });
+      const filePath = path.join(process.cwd(), handleCreateFilePath(outDir, fileContent.path));
+      const pathSplit = fileContent.path.split("/");
+      const folderPath = pathSplit.slice(0, pathSplit.length - 1).join("/");
+      const compOutDir = path.join(process.cwd(), handleCreateFilePath(outDir, folderPath));
+
+      await fs.mkdir(compOutDir, { recursive: true });
       const decodedContent = atob((fileContent as any).content);
-      await handleCreateFile(decodedContent, fileContent.name, folderPath);
+      await handleCreateFile(decodedContent, filePath);
+
       initializingSpinner.stop();
-      console.log(`${pc.bold("Fetched:")} ${pc.cyan(path.join(folderPath, fileContent.name))}`);
+      console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
       const progress = (processedCount / totalCount) * 100;
       if (progress !== 100) {
         progressCallback(progress);
@@ -94,7 +97,6 @@ const handleSaveToFolder = async (
   };
 
   const remoteComponentPath = `src/components/${componentName}`;
-  // console.log(path.join(process.cwd(), outDir));
 
   const basePath = path.join(process.cwd(), outDir);
   const pathToSaveComponent = path.join(basePath, componentName);
