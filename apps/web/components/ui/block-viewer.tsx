@@ -46,6 +46,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { highlightCode } from "@/libs";
 import { Tree } from "@/scripts";
 import Docs from "../docs";
+import { cn } from "../lib/utils";
 // import { Style } from "@/registry/registry-styles";
 
 const V0Button = () => <Button>V0Button</Button>;
@@ -190,7 +191,7 @@ function BlockViewerToolbar() {
 
 const Preview = () => {
   return (
-    <div className="w-[400px]  border-l h-full">
+    <div className="w-[400px]  border-l border-zinc-700 h-full">
       <div className="flex h-12 items-center border-b border-zinc-700 bg-zinc-900" />
       <div className="p-2 ">
         <Image src={"images/phone.png"} alt="Component image" height={900} width={400} // https://www.vecteezy.com/members/phanithi
@@ -413,6 +414,8 @@ function BlockViewer({
   highlightedFiles,
   ...props
 }: Pick<BlockViewerContext, "item" | "tree" | "highlightedFiles"> & { code: string; docs: string; treeData: Tree[] }) {
+  const [current, setCurrent] = React.useState("docs");
+  console.log({ current });
   return (
     <BlockViewerProvider
       item={item}
@@ -420,15 +423,21 @@ function BlockViewer({
       highlightedFiles={highlightedFiles}
       {...props}
     >
-      <Tabs defaultValue="docs" className="bg-transparent">
+      <Tabs onValueChange={setCurrent} value={current} defaultValue="docs" className="bg-transparent">
         <TabsList className="flex w-full  bg-transparent gap-3">
           <TabsTrigger value="docs" asChild>
-            <Button variant={"outline"} className="w-[100px]">
+            <Button
+              variant={"outline"}
+              className={cn("w-[100px] cursor-pointer h-10", current === "docs" && "!bg-accent")}
+            >
               Docs
             </Button>
           </TabsTrigger>
           <TabsTrigger value="explorer" asChild>
-            <Button variant={"outline"} className="w-[100px]">
+            <Button
+              variant={"outline"}
+              className={cn("w-[100px] cursor-pointer h-10", current === "explorer" && "!bg-accent")}
+            >
               Explorer
             </Button>
           </TabsTrigger>
