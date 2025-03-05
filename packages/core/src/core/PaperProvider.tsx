@@ -9,8 +9,8 @@ import {
 import SafeAreaProviderCompat from './SafeAreaProviderCompat';
 import { Provider as SettingsProvider, Settings } from './settings';
 import { defaultThemesByVersion, ThemeProvider } from './theming';
-import MaterialCommunityIcon from '../components/MaterialCommunityIcon';
-import PortalHost from '../components/Portal/PortalHost';
+import MaterialCommunityIcon from '../MaterialCommunityIcon';
+import PortalHost from '../Portal/PortalHost';
 import type { ThemeProp } from '../types';
 import { addEventListener } from '../utils/addEventListener';
 

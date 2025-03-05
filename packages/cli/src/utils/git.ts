@@ -6,7 +6,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { OWNER, REPO, REPO_CORE } from "./constants.js";
 
-import { initializingSpinner, settingUpSpinner, spinner } from "./helpers.js";
+import { initializingSpinner, processDirectory, settingUpSpinner, spinner } from "./helpers.js";
 
 const execAsync = promisify(exec);
 
@@ -45,9 +45,8 @@ export const initProject = async (outDir: string, spinner: any) => {
       REPO_CORE,
       tempCoreDir,
       "packages/core/src/core",
-      "packages/core/src/styles packages/core/src/utils packages/core/src/types.tsx",
+      "packages/core/src/styles packages/core/src/utils packages/core/src/components/MaterialCommunityIcon packages/core/src/components/Portal packages/core/src/types.tsx",
     );
-
     // Move core files to final location
     fs.mkdirSync(corePath, { recursive: true });
     await execAsync(
@@ -61,6 +60,12 @@ export const initProject = async (outDir: string, spinner: any) => {
     );
     await execAsync(
       `cp ${path.join(tempCoreDir, "packages/core/src/types.tsx")} ${corePath}`,
+    );
+    await execAsync(
+      `cp -r ${path.join(tempCoreDir, "packages/core/src/components/MaterialCommunityIcon")} ${corePath}`,
+    );
+    await execAsync(
+      `cp -r ${path.join(tempCoreDir, "packages/core/src/components/Portal")} ${corePath}`,
     );
 
     // Clean up core temp directory
@@ -132,8 +137,8 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
     fs.mkdirSync(componentDir, { recursive: true });
 
     // Copy component files from temp folder to actual location
-    if (otherSparses) {
-      const sparses = otherSparses.split(" ");
+    const sparses = otherSparses?.split(" ") || [];
+    if (sparses.length) {
       for (const s of [...sparses, remoteComponentFolderPath]) {
         if (s === outDir) {
           await execAsync(`cp -r ${path.join(tempDir, s)}/* ${componentDir}`);
@@ -154,7 +159,7 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
     // Cleanup and process
     fs.rmSync(tempDir, { recursive: true, force: true });
 
-    // processDirectory(componentDir, remoteComponentFolderPath, outDir);
+    processDirectory([...sparses, remoteComponentFolderPath]);
 
     removeTestFiles(componentDir);
     settingUpSpinner.succeed("Setting up: Done...");

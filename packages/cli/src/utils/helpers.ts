@@ -3,8 +3,11 @@ import path from "path";
 
 import ora from "ora";
 import pc from "picocolors";
+import { Project, SourceFile, StringLiteral } from "ts-morph";
 
 import { BLUE, RED, YELLOW } from "./constants.js";
+
+const project = new Project();
 
 export const hexToAnsi256 = (sHex: string): number => {
   const rgb = parseInt(sHex.slice(1), 16);
@@ -71,30 +74,54 @@ const replacePathsInFile = (filePath: string, componentName: string, outDirInCon
   });
 };
 
-export const processDirectory = (directory: string, componentName: string, outDirInConfig: string): void => {
-  fs.readdir(directory, { withFileTypes: true }, (err, files) => {
-    if (err) {
-      console.error(`Error reading directory ${directory}:`, err);
-      return;
+const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
+  const imports = sourceFile?.getImportDeclarations() || [];
+  return imports.map((i) => i.getModuleSpecifier());
+};
+
+const updateImport = (moduleSpecifiers: StringLiteral[]) => {
+  for (let s of moduleSpecifiers) {
+    const literal = s.getLiteralValue();
+    if (literal.includes("components/")) {
+      const newImport = literal.split("components/").join("");
+      s.setLiteralValue(newImport);
+      // console.log({ newImport });
     }
+  }
+};
 
-    files.forEach((file) => {
-      const fullPath = path.join(directory, file.name);
+export const processDirectory = async (componentsDir: string[]): Promise<void> => {
+  for (let compDir of componentsDir) {
+    try {
+      // If current is a directory
+      if (fs.lstatSync(compDir).isDirectory()) {
+        const dirs = fs.readdirSync(compDir);
+        for (let dir of dirs) {
+          const compPath = path.join(compDir, dir);
 
-      if (file.isDirectory()) {
-        // Recursively process subdirectories
-        processDirectory(fullPath, componentName, outDirInConfig);
-      } else if (
-        file.isFile() && path.extname(file.name) === ".ts"
-        || path.extname(file.name) === ".js"
-        || path.extname(file.name) === ".jsx"
-        || path.extname(file.name) === ".tsx"
-      ) {
-        // Process only .ts files (or change the extension as needed)
-        // replacePathsInFile(fullPath, componentName, outDirInConfig);
+          if (fs.lstatSync(compPath).isFile()) {
+            project.addSourceFileAtPath(compPath);
+            const sourceFile = project.getSourceFile(compPath);
+            // Get import statements
+            const moduleSpecifiers = getModuleSpecifier(sourceFile);
+            updateImport(moduleSpecifiers);
+            await sourceFile?.save();
+
+            // console.log(imports);
+          }
+        }
+      } else {
+        // Get import statements
+        const sourceFile = project.getSourceFile(compDir);
+        const moduleSpecifiers = getModuleSpecifier(sourceFile);
+        updateImport(moduleSpecifiers);
+        await sourceFile?.save();
+        // console.log(imports);
       }
-    });
-  });
+    } catch (err) {
+      console.log(err);
+    }
+  }
 };
 
 export const handleCreateConfigFile = (configPath: string, outDir: string) => {
