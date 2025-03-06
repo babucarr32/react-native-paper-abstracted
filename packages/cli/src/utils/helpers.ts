@@ -1,11 +1,16 @@
-import fs from "fs";
 import path from "path";
-
-import ora from "ora";
 import pc from "picocolors";
+import { Octokit } from "octokit";
+import { _spinner } from "./spinners.js";
+import { OWNER, REPO } from "./constants.js";
+import fileSystem, { promises as fs } from "fs";
+import { BLUE, RED, YELLOW } from "./constants.js";
+import { overrideComponentPrompter } from "./index.js";
 import { Project, SourceFile, StringLiteral } from "ts-morph";
 
-import { BLUE, RED, YELLOW } from "./constants.js";
+const spinner = _spinner();
+
+const octokit = new Octokit({ auth: process.env.AUTH_TOKEN });
 
 const project = new Project();
 
@@ -31,49 +36,6 @@ export const turboRed = hex(RED);
 export const turboBlue = hex(BLUE);
 export const turboYellow = hex(YELLOW);
 
-export const spinner = ora({
-  text: "Fetching content...",
-  spinner: {
-    frames: ["   ", turboBlue(">  "), turboYellow(">> "), turboRed(">>>")],
-  },
-});
-
-export const initializingSpinner = ora({
-  text: "Initializing...",
-});
-
-export const settingUpSpinner = ora({
-  text: "Initializing...",
-});
-
-const replacePathsInFile = (filePath: string, componentName: string, outDirInConfig: string): void => {
-  fs.readFile(filePath, "utf8", (err, data) => {
-    if (err) {
-      console.error(`Error reading file ${filePath}:`, err);
-      return;
-    }
-
-    // Regex to match paths starting with ./ or ../
-    // const regex = /from\s+(['"])(?:\.\.?\/)+([^'"]+)/g;
-    const regex = /from\s+'(\.\.\/\.\.\/)+/g;
-    const result = data.replace(regex, (match) => {
-      // Count the number of '../' occurrences
-      const depth = match.split("../").length - 1;
-      // Create a new path with one less '../'
-      return `from '${"../".repeat(depth - 1)}`;
-    });
-
-    // // Write the modified content back to the file
-    // fs.writeFile(filePath, result, "utf8", (err) => {
-    //   // if (err) {
-    //   //     console.error(`Error writing file ${filePath}:`, err);
-    //   // } else {
-    //   //     console.log(`Updated paths in ${filePath}`);
-    //   // }
-    // });
-  });
-};
-
 const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
   const imports = sourceFile?.getImportDeclarations() || [];
   return imports.map((i) => i.getModuleSpecifier());
@@ -85,7 +47,6 @@ const updateImport = (moduleSpecifiers: StringLiteral[]) => {
     if (literal.includes("components/")) {
       const newImport = literal.split("components/").join("");
       s.setLiteralValue(newImport);
-      // console.log({ newImport });
     }
   }
 };
@@ -94,20 +55,18 @@ export const processDirectory = async (componentsDir: string[]): Promise<void> =
   for (let compDir of componentsDir) {
     try {
       // If current is a directory
-      if (fs.lstatSync(compDir).isDirectory()) {
-        const dirs = fs.readdirSync(compDir);
+      if (fileSystem.lstatSync(compDir).isDirectory()) {
+        const dirs = fileSystem.readdirSync(compDir);
         for (let dir of dirs) {
           const compPath = path.join(compDir, dir);
 
-          if (fs.lstatSync(compPath).isFile()) {
+          if (fileSystem.lstatSync(compPath).isFile()) {
             project.addSourceFileAtPath(compPath);
             const sourceFile = project.getSourceFile(compPath);
             // Get import statements
             const moduleSpecifiers = getModuleSpecifier(sourceFile);
             updateImport(moduleSpecifiers);
             await sourceFile?.save();
-
-            // console.log(imports);
           }
         }
       } else {
@@ -116,7 +75,6 @@ export const processDirectory = async (componentsDir: string[]): Promise<void> =
         const moduleSpecifiers = getModuleSpecifier(sourceFile);
         updateImport(moduleSpecifiers);
         await sourceFile?.save();
-        // console.log(imports);
       }
     } catch (err) {
       console.log(err);
@@ -128,8 +86,119 @@ export const handleCreateConfigFile = (configPath: string, outDir: string) => {
   const data = { outDir };
   const dataString = JSON.stringify(data, null, 2);
   try {
-    fs.writeFileSync(configPath, dataString, "utf8");
+    fileSystem.writeFileSync(configPath, dataString, "utf8");
   } catch (err) {
     console.log(err);
   }
+};
+
+const COMPONENTS_PATH = "src/components";
+
+const handleCreateFile = async (
+  decodedContent: string,
+  filePath: string,
+) => {
+  const uint8ArrayContent = new Uint8Array(decodedContent.length);
+  for (let i = 0; i < decodedContent.length; i++) {
+    uint8ArrayContent[i] = decodedContent.charCodeAt(i);
+  }
+  await fs.writeFile(filePath, uint8ArrayContent);
+};
+
+const handleCreateFilePath = (basePath: string, relativePath: string) => {
+  const contentPath = relativePath.split(COMPONENTS_PATH).pop() || "";
+  return path.join(basePath, contentPath);
+};
+
+const checkRateLimit = async () => {
+  const result = await octokit.request("GET /rate_limit", {
+    headers: {
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  console.log(result);
+};
+
+const handleGetContent = async (componentName: string) => {
+  const result = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
+    owner: OWNER,
+    repo: REPO,
+    path: componentName,
+    headers: {
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  return result;
+};
+
+export const handleSaveToFolder = async (
+  outDir: string,
+  componentName: string,
+  progressCallback: (progress: number) => void,
+) => {
+  let processedCount = 0;
+  let totalCount = 0;
+
+  // await checkRateLimit();
+  // return;
+
+  const recurse = async (componentPath: string) => {
+    const result = await handleGetContent(componentPath);
+    const fileContent = result.data;
+
+    if (Array.isArray(fileContent)) {
+      totalCount += fileContent.length;
+      await Promise.all(
+        fileContent.map(async (data: any) => {
+          if (data.type === "dir") {
+            const dirPath = path.join(process.cwd(), handleCreateFilePath(outDir, data.path));
+            await fs.mkdir(dirPath, { recursive: true });
+            await recurse(data.path);
+          } else {
+            await recurse(data.path);
+          }
+        }),
+      );
+    } else {
+      processedCount++;
+      const filePath = path.join(process.cwd(), handleCreateFilePath(outDir, fileContent.path));
+      const pathSplit = fileContent.path.split("/");
+      const folderPath = pathSplit.slice(0, pathSplit.length - 1).join("/");
+      const compOutDir = path.join(process.cwd(), handleCreateFilePath(outDir, folderPath));
+
+      await fs.mkdir(compOutDir, { recursive: true });
+      const decodedContent = atob((fileContent as any).content);
+      await handleCreateFile(decodedContent, filePath);
+
+      spinner.stop();
+      console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
+      const progress = (processedCount / totalCount) * 100;
+      if (progress !== 100) {
+        progressCallback(progress);
+      }
+    }
+  };
+
+  const remoteComponentPath = `src/components/${componentName}`;
+
+  const basePath = path.join(process.cwd(), outDir);
+  const pathToSaveComponent = path.join(basePath, componentName);
+
+  if (fileSystem.existsSync(pathToSaveComponent)) {
+    const override = await overrideComponentPrompter();
+    if (override) {
+      await fs.rm(pathToSaveComponent, { recursive: true, force: true });
+    } else {
+      process.exit();
+    }
+  }
+
+  if (!fileSystem.existsSync(basePath)) {
+    await fs.mkdir(basePath, { recursive: true });
+  }
+
+  spinner.start();
+  await recurse(remoteComponentPath);
+  progressCallback(100);
+  return pathToSaveComponent;
 };
