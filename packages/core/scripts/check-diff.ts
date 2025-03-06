@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs-extra";
 import pc from "picocolors";
 import { createTwoFilesPatch } from "diff";
-import { cloneSpecificFolder } from "@react-native-paper-abstracted/cli/src/utils/git";
+import { cloneSpecificFolder } from "@react-native-paper-abstracted/cli/src/utils";
 import { remoteDirs } from "@react-native-paper-abstracted/cli/src/utils/constants";
 
 const REMOTE_COMPONENTS = "__remote_components__";
