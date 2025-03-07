@@ -69,7 +69,7 @@ const DynamicIntros = () => {
   }, []);
 
   return (
-    <div className="relative h-20 flex items-center justify-center">
+    <div className="relative h-10 md:h-20 flex items-center justify-center">
       <AnimatePresence mode="wait">
         <motion.p
           key={currentIndex}
@@ -77,7 +77,7 @@ const DynamicIntros = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
-          className="mt-5 text-3xl text-center font-light absolute"
+          className="mt-5 sm:2xl md:text-3xl text-center font-light absolute"
         >
           {texts[currentIndex]}
         </motion.p>

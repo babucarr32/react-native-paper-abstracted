@@ -1,7 +1,7 @@
 import ora from "ora";
 import { turboBlue, turboRed, turboYellow } from "./index.js";
 
-export const _spinner = () => {
+export function _spinner() {
   const loader = ora();
   return ({
     fetch: (msg = "Fetching content...") => {
@@ -18,4 +18,4 @@ export const _spinner = () => {
     start: (msg?: string) => loader.start(msg),
     succeed: (msg?: string) => loader.succeed(msg),
   });
-};
+}

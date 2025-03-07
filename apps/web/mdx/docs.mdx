@@ -1,139 +1,84 @@
 # RNPA CLI Installation Guide
 
-## Overview
+## Introduction
+React Native Paper Abstracted is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com).
+Thus allowing users to keep their app size small, and provides endless customization.
 
-RNPA CLI is a command-line interface tool designed to streamline resource management and process automation. This document provides comprehensive installation instructions for various operating systems and deployment environments.
+## Installation
 
-## System Requirements
-
-- **Operating Systems**: Windows 10+, macOS 10.14+, Ubuntu 18.04+, RHEL 8+
-- **RAM**: Minimum 2GB, 4GB recommended
-- **Disk Space**: 500MB minimum
-- **Python**: Version 3.8 or higher (for some features)
-- **Node.js**: Version 14.x or higher
-
-## Installation Methods
-
-### Method 1: Package Manager Installation
-
-#### For macOS (using Homebrew)
+### CLI
+The command-line interface tool is allows you to setup and install components effortlessly.
 
 ```bash
-brew update
-brew install rnpa-cli
+npm install @react-native-paper-abstracted/cli
 ```
+<br />
 
-#### For Linux (using APT)
+### Manual
+React Native Paper Abstracted can be used without installating any tools.
 
 ```bash
-sudo apt update
-sudo apt install rnpa-cli
+npm i @callstack/react-theme-provider
+npm i color
+npm install react-native-safe-area-context
 ```
+Navigate to the explorer tab, and add the components in the following folders/files to your project.
+1. **/core**
+2. **/styles**
+3. **/utils**
+4. **/types.tsx**
 
-#### For Windows (using Chocolatey)
+On IOS, you need to link the native part of the React Native Paper.
 
 ```bash
-choco install rnpa-cli
+npx pod-install
 ```
 
-### Method 2: Direct Download Installation
-
-1. Download the latest version from the [official RNPA CLI website](https://example.com/rnpa-cli/downloads)
-2. Extract the package to your desired location
-3. Add the binary to your system PATH
-
-#### Windows Manual Installation
-
-1. Download the Windows installer (.msi)
-2. Run the installer and follow the on-screen instructions
-3. The installer will automatically add RNPA CLI to your PATH
-
-#### macOS/Linux Manual Installation
-
-1. Download the appropriate tarball (.tar.gz)
-2. Extract it: `tar -xzf rnpa-cli-[version].tar.gz`
-3. Move to a suitable location: `sudo mv rnpa-cli /usr/local/bin/`
-4. Make it executable: `chmod +x /usr/local/bin/rnpa-cli`
-
-### Method 3: Using NPM
-
-If you already have Node.js installed:
+For non expo managed projects you need to install and link [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
+specifically MaterialCommunityIcons.
 
 ```bash
-npm install -g rnpa-cli
+npm install @react-native-vector-icons/material-icons
+npm i @types/react-native-vector-icons
 ```
 
-## Verifying Installation
+If you use Expo, you don't need to install vector icons. But if you have a babel.config.js or .babelrc file, make sure that it includes
+babel-preset-expo.
 
-To verify that RNPA CLI was installed correctly:
+.babelrc
+```ts
+module.exports = {
+  presets: ['module:metro-react-native-babel-preset'],
+};
+```
 
+babel.config.js
+```ts
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+```
+<br />
+## Usage
+---
+
+### CLI
+
+To inititalize the project run the following.
 ```bash
-rnpa --version
+npx rnpa init
 ```
 
-This should display the version number of the installed RNPA CLI.
-
-## Configuration
-
-After installation, you'll need to set up your configuration:
-
+To add components use the *add* option followed by the component name.
 ```bash
-rnpa configure
+npx rnpa add <coponent-name>
 ```
+You can get the names and commands of the components from the explorer tab.
 
-Follow the interactive prompts to configure your credentials and preferences.
+<br />
 
-## Troubleshooting
-
-### Common Issues
-
-1. **Command not found**: Ensure the installation directory is in your PATH
-2. **Permission errors**: Try running with elevated privileges or check file permissions
-3. **Dependency conflicts**: Make sure all requirements are met and try reinstalling
-
-### Getting Help
-
-For additional support:
-
-- Run `rnpa help` to see all available commands
-- Visit our documentation at [docs.example.com/rnpa-cli](https://docs.example.com/rnpa-cli)
-- Join our community forum at [community.example.com](https://community.example.com)
-
-## Updating RNPA CLI
-
-To update to the latest version:
-
-```bash
-rnpa update
-```
-
-Or use the same method you used for installation:
-
-```bash
-# For Homebrew
-brew upgrade rnpa-cli
-
-# For APT
-sudo apt update && sudo apt upgrade rnpa-cli
-
-# For NPM
-npm update -g rnpa-cli
-```
-
-## Uninstalling
-
-To remove RNPA CLI:
-
-```bash
-# For Homebrew
-brew uninstall rnpa-cli
-
-# For APT
-sudo apt remove rnpa-cli
-
-# For NPM
-npm uninstall -g rnpa-cli
-
-# For Windows
-Use the Control Panel -> Programs and Features
-```
+### Manual
+Visit the explorer tab, and copy your desired component.
