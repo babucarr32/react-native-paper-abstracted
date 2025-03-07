@@ -11,7 +11,11 @@ const ShinyText = ({ text, disabled = false, speed = 5, className = "" }: ShinyT
   const animationDuration = `${speed}s`;
 
   return (
-    <Button className="cursor-pointer rounded-full bg-zinc-100 h-14 dark:bg-zinc-900" variant={"outline"} size={"lg"}>
+    <Button
+      className="!rounded-full cursor-pointer rounded-full bg-zinc-100 h-14 dark:bg-zinc-900"
+      variant={"outline"}
+      size={"lg"}
+    >
       <div
         className={`shiny-text !text-[17px] text-black dark:text-[#b5b5b5a4] ${
           disabled ? "disabled" : ""
