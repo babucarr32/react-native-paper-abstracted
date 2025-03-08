@@ -20,6 +20,16 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
   );
 };
 
+const CORE_COMPONENTS = [
+  "packages/core/src/core",
+  "packages/core/src/styles",
+  "packages/core/src/utils",
+  "packages/core/src/components/MaterialCommunityIcon",
+  "packages/core/src/components/Portal",
+  "packages/core/src/types.tsx",
+];
+const OTHER_SPARSES = CORE_COMPONENTS.slice(1).join(" ");
+
 export const initProject = async (outDir: string, spinner: ReturnType<typeof _spinner>) => {
   let tempCoreDir: string = "";
 
@@ -46,28 +56,30 @@ export const initProject = async (outDir: string, spinner: ReturnType<typeof _sp
       REPO_CORE,
       tempCoreDir,
       "packages/core/src/core",
-      "packages/core/src/styles packages/core/src/utils packages/core/src/components/MaterialCommunityIcon packages/core/src/components/Portal packages/core/src/types.tsx",
+      OTHER_SPARSES,
     );
     // Move core files to final location
     fs.mkdirSync(corePath, { recursive: true });
-    await execAsync(
-      `cp -r ${path.join(tempCoreDir, "packages/core/src/core")} ${corePath}`,
-    );
-    await execAsync(
-      `cp -r ${path.join(tempCoreDir, "packages/core/src/styles")} ${corePath}`,
-    );
-    await execAsync(
-      `cp -r ${path.join(tempCoreDir, "packages/core/src/utils")} ${corePath}`,
-    );
-    await execAsync(
-      `cp ${path.join(tempCoreDir, "packages/core/src/types.tsx")} ${corePath}`,
-    );
-    await execAsync(
-      `cp -r ${path.join(tempCoreDir, "packages/core/src/components/MaterialCommunityIcon")} ${corePath}`,
-    );
-    await execAsync(
-      `cp -r ${path.join(tempCoreDir, "packages/core/src/components/Portal")} ${corePath}`,
-    );
+
+    const coreComponentsPath: string[] = [];
+
+    for (let i of CORE_COMPONENTS) {
+      // If sparse is a file omit -r flag
+      if (corePath.includes(".")) {
+        await execAsync(
+          `cp ${path.join(tempCoreDir, i)} ${corePath}`,
+        );
+      } else {
+        await execAsync(
+          `cp -r ${path.join(tempCoreDir, i)} ${corePath}`,
+        );
+      }
+      coreComponentsPath.push(path.join(corePath, path.basename(i)));
+    }
+
+    // Process the core components, and update imports
+    const relativeOutDir = path.join(process.cwd(), outDir);
+    await processDirectory(coreComponentsPath, relativeOutDir);
 
     // Clean up core temp directory
     fs.rmSync(tempCoreDir, { recursive: true, force: true });
@@ -100,13 +112,8 @@ const removeTestFiles = async (filePath: string) => {
   }
 };
 
-const stopSpinners = () => {
-  spinner.stop();
-};
-
 export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderPath: string, otherSparses?: string) => {
   let tempDir: string = "";
-  // return;
   try {
     spinner.initialize();
     // Create the base output directory

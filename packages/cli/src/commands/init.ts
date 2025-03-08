@@ -2,7 +2,7 @@ import fs from "node:fs";
 import pc from "picocolors";
 import path from "node:path";
 
-import { initProject } from "../utils/index.js";
+import { ensureString, initProject } from "../utils/index.js";
 import { _spinner } from "../utils/spinners.js";
 import { RNPAConfig } from "../../rnpa.config.js";
 import { handleCreateConfigFile } from "../utils/index.js";
@@ -21,7 +21,7 @@ export const init = async () => {
       if (override) {
         const { configOutDir: outDir, importAlias } = await prompter();
         componentOutDir = outDir;
-        handleCreateConfigFile(configPath, outDir);
+        handleCreateConfigFile(configPath, { outDir, alias: ensureString(importAlias) });
       }
     }
   } catch (err) {
@@ -30,14 +30,14 @@ export const init = async () => {
       if (createConfigFile) {
         const { configOutDir: outDir, importAlias } = await prompter();
         componentOutDir = outDir;
-        handleCreateConfigFile(configPath, outDir);
+        handleCreateConfigFile(configPath, { outDir, alias: ensureString(importAlias) });
       }
     }
   }
 
   try {
     const data = fs.readFileSync(configPath, "utf-8");
-    const { outDir } = JSON.parse(data) as RNPAConfig;
+    const { outDir, alias } = JSON.parse(data) as RNPAConfig;
 
     if (!outDir) {
       console.log(
