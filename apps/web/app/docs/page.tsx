@@ -8,7 +8,7 @@ const item = { name: "shad" };
 
 const treeData = generateTree(OUT_DIR);
 
-const getDocs = () => {
+const getDocs = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     fs.readFile(path.join(process.cwd(), "mdx/docs.mdx"), { encoding: "utf8" }, (err, data) => {
       if (err) {

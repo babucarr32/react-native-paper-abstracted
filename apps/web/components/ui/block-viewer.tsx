@@ -3,20 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Check,
-  ChevronRight,
-  Clipboard,
-  Divide,
-  File,
-  Folder,
-  Fullscreen,
-  Monitor,
-  Slash,
-  Smartphone,
-  Tablet,
-  Terminal,
-} from "lucide-react";
+import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, Loader } from "lucide-react";
 import { ImperativePanelHandle } from "react-resizable-panels";
 // import { registryItemFileSchema, registryItemSchema } from "shadcn/registry";
 import { z } from "zod";
@@ -41,12 +28,11 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-// import { trees } from "@/data";
 import { highlightCode } from "@/libs";
-import { Tree } from "@/scripts";
+import { TreeType } from "@/scripts";
 import Docs from "../docs";
 import { cn } from "../lib/utils";
+import { usePostHog } from "posthog-js/react";
 // import { Style } from "@/registry/registry-styles";
 
 const V0Button = () => <Button>V0Button</Button>;
@@ -103,7 +89,7 @@ function BlockViewerProvider({
   const [style, setStyle] = React.useState<BlockViewerContext["style"]>("");
   const [activeFile, setActiveFile] = React.useState<
     BlockViewerContext["activeFile"]
-  >("__components__/components/ActivityIndicator/index.tsx" ?? null);
+  >("__components__/components/ActivityIndicator/index.tsx");
   const resizablePanelRef = React.useRef<ImperativePanelHandle>(null);
 
   const togglePreview = () => {
@@ -115,18 +101,18 @@ function BlockViewerProvider({
       value={{
         item,
         view,
-        setView,
+        tree,
         style,
-        togglePreview,
+        setView,
         preview,
         setStyle,
-        setFileContent,
-        fileContent,
-        resizablePanelRef: resizablePanelRef as any,
         activeFile,
+        fileContent,
+        togglePreview,
         setActiveFile,
-        tree,
+        setFileContent,
         highlightedFiles,
+        resizablePanelRef: resizablePanelRef as any,
       }}
     >
       <div
@@ -143,6 +129,7 @@ function BlockViewerProvider({
 }
 
 function BlockViewerToolbar() {
+  const posthog = usePostHog();
   const { setView, togglePreview, item, resizablePanelRef, style, activeFile } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
@@ -165,6 +152,7 @@ function BlockViewerToolbar() {
             className="hidden !h-9 w-auto gap-1 !rounded-xl px-2 md:flex lg:w-auto"
             onClick={() => {
               copyToClipboard(`npx rnpa add ${activeComponentName}`);
+              posthog.capture("copy_code");
             }}
           >
             {isCopied ? <Check /> : <Terminal />}
@@ -172,17 +160,17 @@ function BlockViewerToolbar() {
           </Button>
         </div>
         <div className="ml-4 flex gap-3">
-          <Button variant={"outline"} onClick={togglePreview} className="h-10 rounded-xl">
+          <Button
+            variant={"outline"}
+            onClick={() => {
+              posthog.capture("visit_repo");
+              togglePreview && togglePreview();
+            }}
+            className="h-10 rounded-xl"
+          >
+            <Eye />
             Preview
           </Button>
-          <a
-            href={`https://callstack.github.io/react-native-paper/docs/components/${activeComponentName}/`}
-            target="_blank"
-          >
-            <Button size={"sm"} variant={"outline"} className="h-10 rounded-xl cursor-pointer">
-              Docs
-            </Button>
-          </a>
         </div>
       </div>
     </div>
@@ -201,61 +189,81 @@ const Preview = () => {
   );
 };
 
-function BlockViewerCode({ treeData }: { code: string; treeData: Tree[] }) {
-  const { activeFile, preview, setFileContent, highlightedFiles } = useBlockViewer();
-  const [code, setCode] = React.useState("");
-  // const file = React.useMemo(() => {
-  //   return highlightedFiles?.find((file) => file.target === activeFile);
-  // }, [highlightedFiles, activeFile]);
+const ConditionalLoadingRenderer = (
+  { loading, Loader, children }: {
+    loading: boolean | undefined;
+    Loader?: () => React.JSX.Element;
+    children: React.ReactNode;
+  },
+) => {
+  if (loading) return Loader ? <Loader /> : "";
 
-  // if (!file) {
-  //   return null;
-  // }
-  const file = {};
+  return <>{children}</>;
+};
+
+const LoadingSpinner = () => (
+  <div className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-fit h-fit animate-spin">
+    <Loader />
+  </div>
+);
+
+function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
+  const posthog = usePostHog();
+  const [code, setCode] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
+  const { activeFile, preview, setFileContent } = useBlockViewer();
 
   React.useEffect(() => {
     (async () => {
       if (activeFile) {
+        setLoading(true);
         getContent(activeFile).then((result) => {
           const { raw, content } = result;
           setFileContent(raw);
           setCode(content);
-        }).catch((err) => {});
+          setLoading(false);
+        }).catch((err) => {
+          setLoading(false);
+        });
       }
     })();
   }, [activeFile]);
-  // return (
-  //   <div
-  //     // key={file?.path}
-  //     // data-rehype-pretty-code-fragment
-  //     // dangerouslySetInnerHTML={{ __html: file?.highlightedContent ?? "" }}
-  //     dangerouslySetInnerHTML={{ __html: highlighted ?? "" }}
-  //     // className="relative flex-1 overflow-hidden after:absolute after:inset-y-0 after:left-0 after:w-10 after:bg-zinc-950 [&_.line:before]:sticky [&_.line:before]:left-2 [&_.line:before]:z-10 [&_.line:before]:translate-y-[-1px] [&_.line:before]:pr-1 [&_pre]:h-[--height] [&_pre]:overflow-auto [&_pre]:!bg-transparent [&_pre]:pb-20 [&_pre]:pt-4 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed"
-  //   />
-  // );
 
   const currentFilePath = activeFile?.split("__/").pop();
+
+  const componentName = activeFile?.split("/")[2]?.split(".")[0] || "";
+  const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
 
   return (
     <div className="mr-[14px] border-r border-b flex overflow-hidden rounded-xl bg-zinc-950 text-white group-data-[view=preview]/block-view-wrapper:hidden md:h-screen">
       <div className="w-[280px]">
         <BlockViewerFileTree treeData={treeData} />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex h-12 items-center gap-2 border-b border-zinc-700 bg-zinc-900 px-4 text-sm font-medium">
           <File className="size-4" />
           {currentFilePath}
+
+          <Link
+            onClick={() => posthog.capture("visit_component_docs")}
+            href={`https://callstack.github.io/react-native-paper/docs/components/${activeComponentName}/`}
+            target="_blank"
+            className="ml-10 flex gap-2 items-center"
+          >
+            <Send className="size-4" />
+            Docs for {componentName}
+          </Link>
           <div className="ml-auto flex items-center gap-2">
             <BlockCopyCodeButton />
           </div>
         </div>
-        <div
-          // key={file?.path}
-          data-rehype-pretty-code-fragment
-          // dangerouslySetInnerHTML={{ __html: file?.highlightedContent ?? "" }}
-          dangerouslySetInnerHTML={{ __html: code ?? "" }}
-          className="relative flex-1 overflow-scroll after:absolute after:inset-y-0 after:left-0 after:w-5 after:bg-zinc-950 [&_.line:before]:sticky [&_.line:before]:left-2 [&_.line:before]:z-10 [&_.line:before]:translate-y-[-1px] [&_.line:before]:pr-1 [&_pre]:h-[--height] [&_pre]:overflow-auto [&_pre]:!bg-transparent [&_pre]:pb-20 [&_pre]:pt-4 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed"
-        />
+        <ConditionalLoadingRenderer loading={loading} Loader={LoadingSpinner}>
+          <div
+            data-rehype-pretty-code-fragment
+            dangerouslySetInnerHTML={{ __html: code ?? "" }}
+            className="relative flex-1 overflow-scroll after:absolute after:inset-y-0 after:left-0 after:w-5 after:bg-zinc-950 [&_.line:before]:sticky [&_.line:before]:left-2 [&_.line:before]:z-10 [&_.line:before]:translate-y-[-1px] [&_.line:before]:pr-1 [&_pre]:h-[--height] [&_pre]:overflow-auto [&_pre]:!bg-transparent [&_pre]:pb-20 [&_pre]:pt-4 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed"
+          />
+        </ConditionalLoadingRenderer>
       </div>
       {preview
         ? <Preview />
@@ -264,13 +272,7 @@ function BlockViewerCode({ treeData }: { code: string; treeData: Tree[] }) {
   );
 }
 
-export function BlockViewerFileTree({ treeData }: { treeData: Tree[] }) {
-  // const { tree } = useBlockViewer();
-
-  // if (!tree) {
-  //   return null;
-  // }
-
+export function BlockViewerFileTree({ treeData }: { treeData: TreeType[] }) {
   return (
     <SidebarProvider className="flex !min-h-full flex-col">
       <Sidebar
@@ -364,7 +366,7 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
     <SidebarMenuItem>
       <Collapsible
         className="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90"
-        defaultOpen
+        defaultOpen={false}
       >
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
@@ -389,12 +391,14 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
 }
 
 function BlockCopyCodeButton() {
+  const posthog = usePostHog();
   const { activeFile, fileContent, item } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
   return (
     <Button
       onClick={() => {
+        posthog.capture("copy_component");
         copyToClipboard(fileContent || "");
       }}
       className="h-7 w-7 shrink-0 rounded-lg p-0 hover:bg-zinc-700 hover:text-white focus:bg-zinc-700 focus:text-white focus-visible:bg-zinc-700 focus-visible:text-white active:bg-zinc-700 active:text-white data-[active=true]:bg-zinc-700 data-[active=true]:text-white [&>svg]:size-3"
@@ -413,7 +417,12 @@ function BlockViewer({
   treeData,
   highlightedFiles,
   ...props
-}: Pick<BlockViewerContext, "item" | "tree" | "highlightedFiles"> & { code: string; docs: string; treeData: Tree[] }) {
+}: Pick<BlockViewerContext, "item" | "tree" | "highlightedFiles"> & {
+  code: string;
+  docs: string;
+  treeData: TreeType[];
+}) {
+  const posthog = usePostHog();
   const [current, setCurrent] = React.useState("docs");
   console.log({ current });
   return (
@@ -427,17 +436,21 @@ function BlockViewer({
         <TabsList className="flex w-full  bg-transparent gap-3">
           <TabsTrigger value="docs" asChild>
             <Button
+              onClick={() => posthog.capture("docs_tab")}
               variant={"outline"}
               className={cn("w-[100px] cursor-pointer h-10", current === "docs" && "!bg-accent")}
             >
+              <Book />
               Docs
             </Button>
           </TabsTrigger>
           <TabsTrigger value="explorer" asChild>
             <Button
               variant={"outline"}
-              className={cn("hidden md:block w-[100px] cursor-pointer h-10", current === "explorer" && "!bg-accent")}
+              onClick={() => posthog.capture("explorer_tab")}
+              className={cn("w-[120px] cursor-pointer h-10", current === "explorer" && "!bg-accent")}
             >
+              <Code />
               Explorer
             </Button>
           </TabsTrigger>

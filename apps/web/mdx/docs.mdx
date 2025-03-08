@@ -1,4 +1,10 @@
-# RNPA CLI Installation Guide
+export function Highlight ({text}) {
+  return (
+    <span className="bg-zinc-700 text-sm p-[3px] rounded-xl px-3">{text}</span>
+  )
+}
+
+# React Native Paper Abstracted(RNPA) Installation Guide
 
 ## Introduction
 React Native Paper Abstracted is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com).
@@ -12,10 +18,14 @@ The command-line interface tool is allows you to setup and install components ef
 ```bash
 npm install @react-native-paper-abstracted/cli
 ```
+
+```bash
+npx rnpa init
+```
 <br />
 
 ### Manual
-React Native Paper Abstracted can be used without installating any tools.
+React Native Paper Abstracted can be used without installing any tools.
 
 ```bash
 npm i @callstack/react-theme-provider
@@ -23,16 +33,12 @@ npm i color
 npm install react-native-safe-area-context
 ```
 Navigate to the explorer tab, and add the components in the following folders/files to your project.
-1. **/core**
-2. **/styles**
-3. **/utils**
-4. **/types.tsx**
+Keep the file structures accordingly.
 
-On IOS, you need to link the native part of the React Native Paper.
-
-```bash
-npx pod-install
-```
+1. <Highlight text={"/core"} />
+2. <Highlight text={"/styles"} />
+3. <Highlight text={"/utils"} />
+4. <Highlight text={"/types.tsx"} />
 
 For non expo managed projects you need to install and link [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
 specifically MaterialCommunityIcons.
