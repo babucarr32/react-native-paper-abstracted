@@ -7,12 +7,15 @@ import fileSystem, { promises as fs } from "fs";
 import { BLUE, RED, YELLOW } from "./constants.js";
 import { overrideComponentPrompter } from "./index.js";
 import { Project, SourceFile, StringLiteral } from "ts-morph";
+import { RNPAConfig } from "../../rnpa.config.js";
 
 const spinner = _spinner();
 
 const octokit = new Octokit({ auth: process.env.AUTH_TOKEN });
 
 const project = new Project();
+
+export const ensureString = (str: string | undefined | null) => str || "";
 
 export const hexToAnsi256 = (sHex: string): number => {
   const rgb = parseInt(sHex.slice(1), 16);
@@ -36,32 +39,82 @@ export const turboRed = hex(RED);
 export const turboBlue = hex(BLUE);
 export const turboYellow = hex(YELLOW);
 
+export const isDir = (dir: string) => {
+  return fileSystem.lstatSync(dir).isDirectory();
+};
+
+export const isFile = (dir: string) => {
+  return fileSystem.lstatSync(dir).isFile();
+};
+
 export const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
   const imports = sourceFile?.getImportDeclarations() || [];
   return imports.map((i) => i.getModuleSpecifier());
 };
 
-const updateImport = (moduleSpecifiers: StringLiteral[], alias?: string, filePath?: string) => {
+const updateImport = (
+  {
+    alias,
+    filePath,
+    relativeOutDir,
+    moduleSpecifiers,
+  }: {
+    alias?: string;
+    filePath?: string;
+    relativeOutDir?: string;
+    moduleSpecifiers: StringLiteral[];
+  },
+) => {
   for (let s of moduleSpecifiers) {
+    // Access the components folder correctly
+    // Specifically used for the core folder
     const literal = s.getLiteralValue();
-    if (literal.includes("components/")) {
-      const newImport = literal.split("components/").join("");
-      s.setLiteralValue(newImport);
-    }
+    if (alias) {
+      // This is used for other components
+      // if path is ../../foo/bar change it to @/alias/foo/bar
+      if (literal.includes("..")) {
+        const newImport = alias + literal.split("..").pop();
+        s.setLiteralValue(newImport);
+      }
 
-    if (alias && literal.includes("..")) {
-      const newImport = alias + literal.split("..").pop();
-      s.setLiteralValue(newImport);
-    }
-
-    if (filePath?.includes("index.tsx") && literal.startsWith("./") && alias) {
-      const newImport = alias + "/" + literal.split("./").pop();
-      s.setLiteralValue(newImport);
+      // If component in Foo/index.tsx prepend imports with alias to
+      // access out components correctly
+      if (filePath?.includes("index.tsx") && literal.startsWith("./")) {
+        const newImport = alias + "/" + ensureString(literal.split("./").pop());
+        s.setLiteralValue(newImport);
+      }
+    } else {
+      // Check if the current import is declaration has over traversed
+      // beyond outside the specified outdir
+      // if relative outdir is foo/bar/baz and the current import
+      // from file foo/bar/baz/comp/index.tsx is ../../foobar
+      // Resolving the dir produces foo/foobar
+      // This is considered to be outside.
+      // The import should be ../foobar and resolve to
+      // foo/bar/baz/foobar
+      if (literal.includes("../..") && relativeOutDir) {
+        const handleTraversePath = (currentImport: string) => {
+          const folderPath = ensureString(filePath?.split("/").slice(0, -1).join("/"));
+          const fullPath = path.resolve(folderPath, currentImport);
+          if (!fullPath.includes(relativeOutDir) && currentImport.includes("../")) {
+            const traversedPath = currentImport.split(/^..\//).join("");
+            // Recusrsively traverse back
+            handleTraversePath(traversedPath);
+          } else {
+            s.setLiteralValue(currentImport);
+          }
+        };
+        handleTraversePath(literal);
+      }
+      if (literal.includes("components/")) {
+        const newImport = literal.split("components/").join("");
+        s.setLiteralValue(newImport);
+      }
     }
   }
 };
 
-export const processDirectory = async (componentsDir: string[]): Promise<void> => {
+export const processDirectory = async (componentsDir: string[], relativeOutDir?: string): Promise<void> => {
   for (let compDir of componentsDir) {
     try {
       // If current is a directory
@@ -75,7 +128,7 @@ export const processDirectory = async (componentsDir: string[]): Promise<void> =
             const sourceFile = project.getSourceFile(compPath);
             // Get import statements
             const moduleSpecifiers = getModuleSpecifier(sourceFile);
-            updateImport(moduleSpecifiers);
+            updateImport({ moduleSpecifiers, filePath: compPath, relativeOutDir });
             await sourceFile?.save();
           }
         }
@@ -83,7 +136,7 @@ export const processDirectory = async (componentsDir: string[]): Promise<void> =
         // Get import statements
         const sourceFile = project.getSourceFile(compDir);
         const moduleSpecifiers = getModuleSpecifier(sourceFile);
-        updateImport(moduleSpecifiers);
+        updateImport({ moduleSpecifiers, filePath: compDir, relativeOutDir });
         await sourceFile?.save();
       }
     } catch (err) {
@@ -92,9 +145,8 @@ export const processDirectory = async (componentsDir: string[]): Promise<void> =
   }
 };
 
-export const handleCreateConfigFile = (configPath: string, outDir: string) => {
-  const data = { outDir };
-  const dataString = JSON.stringify(data, null, 2);
+export const handleCreateConfigFile = (configPath: string, config: RNPAConfig) => {
+  const dataString = JSON.stringify(config, null, 2);
   try {
     fileSystem.writeFileSync(configPath, dataString, "utf8");
   } catch (err) {
@@ -130,20 +182,30 @@ const checkRateLimit = async () => {
 };
 
 const handleGetContent = async (componentName: string) => {
-  const result = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
-    owner: OWNER,
-    repo: REPO,
-    path: componentName,
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
-  return result;
+  try {
+    const result = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
+      owner: OWNER,
+      repo: REPO,
+      path: componentName,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    });
+    return result;
+  } catch ({ message }: any) {
+    if (message.includes("Not Found")) {
+      console.log(pc.red(`component with name ${pc.blue(pc.bold(path.basename(componentName)))} not found..`));
+    } else {
+      console.log(pc.red(message));
+    }
+    process.exit();
+  }
 };
 
 export const handleSaveToFolder = async (
   outDir: string,
   componentName: string,
+  importAlias: string,
   progressCallback: (progress: number) => void,
 ) => {
   let processedCount = 0;
@@ -154,45 +216,47 @@ export const handleSaveToFolder = async (
 
   const recurse = async (componentPath: string) => {
     const result = await handleGetContent(componentPath);
-    const fileContent = result.data;
+    const fileContent = result?.data;
 
-    if (Array.isArray(fileContent)) {
-      totalCount += fileContent.length;
-      await Promise.all(
-        fileContent.map(async (data: any) => {
-          if (data.type === "dir") {
-            const dirPath = path.join(process.cwd(), handleCreateFilePath(outDir, data.path));
-            await fs.mkdir(dirPath, { recursive: true });
-            await recurse(data.path);
-          } else {
-            await recurse(data.path);
-          }
-        }),
-      );
-    } else {
-      processedCount++;
-      const filePath = path.join(process.cwd(), handleCreateFilePath(outDir, fileContent.path));
-      const pathSplit = fileContent.path.split("/");
-      const folderPath = pathSplit.slice(0, pathSplit.length - 1).join("/");
-      const compOutDir = path.join(process.cwd(), handleCreateFilePath(outDir, folderPath));
+    if (fileContent) {
+      if (Array.isArray(fileContent)) {
+        totalCount += fileContent.length;
+        await Promise.all(
+          fileContent.map(async (data: any) => {
+            if (data.type === "dir") {
+              const dirPath = path.join(process.cwd(), handleCreateFilePath(outDir, data.path));
+              await fs.mkdir(dirPath, { recursive: true });
+              await recurse(data.path);
+            } else {
+              await recurse(data.path);
+            }
+          }),
+        );
+      } else {
+        processedCount++;
+        const filePath = path.join(process.cwd(), handleCreateFilePath(outDir, fileContent?.path));
+        const pathSplit = fileContent.path.split("/");
+        const folderPath = pathSplit.slice(0, pathSplit.length - 1).join("/");
+        const compOutDir = path.join(process.cwd(), handleCreateFilePath(outDir, folderPath));
 
-      await fs.mkdir(compOutDir, { recursive: true });
-      const decodedContent = atob((fileContent as any).content);
-      await handleCreateFile(decodedContent, filePath);
+        await fs.mkdir(compOutDir, { recursive: true });
+        const decodedContent = atob((fileContent as any).content);
+        await handleCreateFile(decodedContent, filePath);
 
-      project.addSourceFileAtPath(filePath);
-      const sourceFile = project.getSourceFile(filePath);
-      // Get import statements
-      const moduleSpecifiers = getModuleSpecifier(sourceFile);
-      const importAlias = `@/${outDir}`;
-      updateImport(moduleSpecifiers, importAlias, filePath);
-      await sourceFile?.save();
+        // Get import statements
+        project.addSourceFileAtPath(filePath);
+        const sourceFile = project.getSourceFile(filePath);
+        const moduleSpecifiers = getModuleSpecifier(sourceFile);
+        // Set import alias
+        updateImport({ moduleSpecifiers, alias: importAlias, filePath });
+        await sourceFile?.save();
 
-      spinner.stop();
-      console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
-      const progress = (processedCount / totalCount) * 100;
-      if (progress !== 100) {
-        progressCallback(progress);
+        spinner.stop();
+        console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
+        const progress = (processedCount / totalCount) * 100;
+        if (progress !== 100) {
+          progressCallback(progress);
+        }
       }
     }
   };
