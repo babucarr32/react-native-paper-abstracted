@@ -1,13 +1,9 @@
 import fs from "fs-extra";
 import { BlockViewer } from "@/components/ui/block-viewer";
-import { OUT_DIR, generateTree } from "@/scripts/index";
-import { mdxToHTML } from "@/libs";
+import { mdxToHTML, SITE_URL } from "@/libs";
 import path from "path";
 
 const item = { name: "shad" };
-
-const treeData = generateTree(OUT_DIR) || [];
-console.log({ treeData });
 
 const getDocs = (): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -23,6 +19,9 @@ const getDocs = (): Promise<string> => {
 };
 
 export default async function Page() {
+  const response = await fetch(`${SITE_URL}/api/tree`);
+  const treeData = await response.json();
+
   const docs = await getDocs();
 
   return (
