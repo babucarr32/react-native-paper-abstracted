@@ -43,7 +43,7 @@ const getDirs = (directory: string) => {
   return result;
 };
 
-export const generateTree = (outDir: string): TreeType[] => {
+export const generateTree = (outDir: string): TreeType[] | undefined => {
   let dirs: string[] = [];
   const tree: TreeType[] = [];
 
@@ -66,4 +66,5 @@ export const generateTree = (outDir: string): TreeType[] => {
     }
     return tree;
   }
+  return undefined;
 };
