@@ -1,8 +1,5 @@
 import fs from "fs-extra";
-import { fetchComponents } from "@react-native-paper-abstracted/core/fetch-components";
 import path from "path";
-
-// fetchComponents("__components__", "src/core", "src/components src/utils src/styles");
 
 export const OUT_DIR = "__components__";
 

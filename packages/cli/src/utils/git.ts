@@ -5,7 +5,7 @@ import { exec } from "child_process";
 
 import { promisify } from "util";
 import { _spinner } from "./spinners.js";
-import { processDirectory } from "./index.js";
+import { ensureString, processDirectory } from "./index.js";
 import { OWNER, REPO, REPO_CORE } from "./constants.js";
 
 const spinner = _spinner();
@@ -18,6 +18,7 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
   await execAsync(
     `cd ${targetPath} && git sparse-checkout set ${sparsePath} ${otherSparsePath} --skip-checks`,
   );
+  console.log("===============>", path.join(process.cwd(), targetPath), "<=================");
 };
 
 const CORE_COMPONENTS = [
@@ -140,6 +141,7 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
 
     // Copy component files from temp folder to actual location
     const sparses = otherSparses?.split(" ") || [];
+    const coreComponentsPath: string[] = [];
     if (sparses.length) {
       for (const s of [...sparses, remoteComponentFolderPath]) {
         if (s === outDir) {
@@ -151,6 +153,11 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
             await execAsync(`cp -r ${path.join(tempDir, s)} ${componentDir}/`);
           }
         }
+        // Use the actual folder or file name of the core component(s) when
+        // processing. Since they the are moved to the outdir as foo/core-folder-or file
+        // and not foo/core/src/core-folder-or-file
+        const componentFolderOrFileName = ensureString(s.split("src/").pop());
+        coreComponentsPath.push(path.join(outDir, componentFolderOrFileName));
       }
     } else {
       await execAsync(
@@ -161,7 +168,11 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
     // Cleanup and process
     fs.rmSync(tempDir, { recursive: true, force: true });
 
-    await processDirectory([...sparses, remoteComponentFolderPath]);
+    // const allSparses = [...(otherSparses?.split(" ") || []), remoteComponentFolderPath];
+    // const sparsesWithRelativePath = allSparses.map((s) => path.join(outDir, s)) || [];
+
+    const relativeOutDir = path.join(process.cwd(), outDir);
+    await processDirectory(coreComponentsPath, relativeOutDir);
 
     removeTestFiles(componentDir);
     spinner.succeed("Setting up: Done...");
