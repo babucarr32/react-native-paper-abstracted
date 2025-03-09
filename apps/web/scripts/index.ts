@@ -47,9 +47,15 @@ export const generateTree = (outDir: string): TreeType[] | undefined => {
   let dirs: string[] = [];
   const tree: TreeType[] = [];
 
-  if (fs.existsSync(outDir)) {
+  fs.readdir(path.resolve()).then((r) => {
+    console.log("0000000", r);
+  }).catch((err) => {
+    console.log("ERRRRR", err);
+  });
+
+  if (fs.existsSync(path.resolve(outDir))) {
     if (fs.lstatSync(outDir).isDirectory()) {
-      dirs = fs.readdirSync(outDir);
+      dirs = fs.readdirSync(path.resolve(outDir));
     }
 
     for (let dir of dirs) {
