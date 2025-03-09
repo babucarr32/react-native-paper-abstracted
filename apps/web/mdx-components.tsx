@@ -11,6 +11,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h4: ({ children }) => <h4 className="font-bold my-4 mt-6">{children}</h4>,
     hr: () => <hr className="my-3" />,
     p: ({ children }) => <p className="my-5">{children}</p>,
+    a: ({ children, href }) => <a href={href} className="text-blue-500">{children}</a>,
     ul: ({ children }) => <ul className="my-4">{children}</ul>,
     li: ({ children }) => <li className="my-2">{children}</li>,
     img: (props) => (
