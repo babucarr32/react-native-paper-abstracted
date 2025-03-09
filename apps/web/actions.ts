@@ -1,10 +1,11 @@
 "use server";
 import fs from "fs-extra";
+import path from "path";
 import { highlightCode } from "./libs";
 
-export async function getContent(path: string): Promise<{ raw: string; content: string }> {
+export async function getContent(filePath: string): Promise<{ raw: string; content: string }> {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, { encoding: "utf8" }, async (err, data) => {
+    fs.readFile(path.join(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
