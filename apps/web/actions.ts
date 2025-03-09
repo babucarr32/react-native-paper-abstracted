@@ -17,13 +17,13 @@ export async function getContent(filePath: string): Promise<{ raw: string; conte
     }).catch((err) => {
       console.log("----ERRRR", err);
     });
-    fs.readdir("/vercel/path0/apps/web").then((r) => {
-      console.log("VERCEL----", r);
-    }).catch((err) => {
-      console.log("----VERCEL ERRRR", err);
-    });
+    // fs.readdir("/vercel/path0/apps/web").then((r) => {
+    //   console.log("VERCEL----", r);
+    // }).catch((err) => {
+    //   console.log("----VERCEL ERRRR", err);
+    // });
 
-    fs.readFile(path.join(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
+    fs.readFile(filePath, { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
