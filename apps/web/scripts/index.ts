@@ -47,21 +47,23 @@ export const generateTree = (outDir: string): TreeType[] => {
   let dirs: string[] = [];
   const tree: TreeType[] = [];
 
-  if (fs.lstatSync(outDir).isDirectory()) {
-    dirs = fs.readdirSync(outDir);
-  }
-
-  for (let dir of dirs) {
-    const filePath = path.join(outDir, dir);
-    if (fs.lstatSync(filePath).isDirectory()) {
-      tree.push({
-        name: dir,
-        path: filePath,
-        children: getDirs(filePath),
-      });
+  if (fs.existsSync(outDir)) {
+    if (fs.lstatSync(outDir).isDirectory()) {
+      dirs = fs.readdirSync(outDir);
     }
 
-    generateTree(filePath);
+    for (let dir of dirs) {
+      const filePath = path.join(outDir, dir);
+      if (fs.lstatSync(filePath).isDirectory()) {
+        tree.push({
+          name: dir,
+          path: filePath,
+          children: getDirs(filePath),
+        });
+      }
+
+      generateTree(filePath);
+    }
+    return tree;
   }
-  return tree;
 };
