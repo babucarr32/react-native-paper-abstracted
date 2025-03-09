@@ -6,7 +6,7 @@ import path from "node:path";
 const tree = generateTree(OUT_DIR);
 
 export async function GET() {
-  const dirs = fs.readdirSync(process.cwd());
+  const dirs = fs.readdirSync(path.resolve(process.cwd()));
   console.log("------------->READ DIR<--------------", dirs);
   return NextResponse.json(tree);
 }
