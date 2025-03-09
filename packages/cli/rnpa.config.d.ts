@@ -1,4 +1,5 @@
 export interface RNPAConfig {
+  alias: string;
   outDir: string;
 }
 

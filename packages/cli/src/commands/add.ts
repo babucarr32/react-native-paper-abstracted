@@ -17,14 +17,14 @@ export const add = async (str: string) => {
       return;
     }
 
-    const { outDir } = JSON.parse(data) as RNPAConfig;
+    const { outDir, alias } = JSON.parse(data) as RNPAConfig;
 
     if (!outDir) {
       console.log(pc.red(`Invalid configuration: ${pc.green("outDir")} not found specified.`));
       return;
     }
 
-    const installedPath = await handleSaveToFolder(outDir, str, (progress) => {
+    const installedPath = await handleSaveToFolder(outDir, str, alias, (progress) => {
       spinner.fetch();
       if (progress === 100) spinner.succeed("Done");
     });

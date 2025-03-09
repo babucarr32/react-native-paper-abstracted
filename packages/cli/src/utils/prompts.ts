@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import prompts, { PromptObject } from "prompts";
 
 interface PromptState {
@@ -72,15 +73,6 @@ const promptOutDir: PromptObject<string>[] = [
   // },
 ];
 
-// const promptUseImportAlias: PromptObject<string>[] = [
-//   {
-//     type: 'text',
-//     name: 'importAlias',
-//     message: 'What is your import alias',
-//     initial: '@/components'
-//   },
-// ];
-
 const questions: PromptObject<string>[] = [
   {
     type: "number",
@@ -103,10 +95,23 @@ type PromptReturnType = {
 };
 
 export const prompter = async (): Promise<PromptReturnType> => {
-  let response: prompts.Answers<string> = {};
+  let alias;
 
   const { configOutDir, useImportAlias } = await prompts(promptOutDir);
-  return ({ ...response, configOutDir });
+
+  if (fs.existsSync("tsconfig.json")) {
+    const { importAlias } = await prompts([
+      {
+        type: "text",
+        name: "importAlias",
+        message: "What is your import alias",
+        initial: `@/${configOutDir}`,
+      },
+    ]);
+    alias = importAlias;
+  }
+
+  return ({ importAlias: alias, configOutDir });
 
   // if (useImportAlias) {
   //   response = await prompts(promptUseImportAlias);
