@@ -42,8 +42,7 @@ const generateTree = (outDir: string): TreeType[] | undefined => {
   const tree: TreeType[] = [];
 
   const OUT_DIR = outDir;
-  const dirss = fs.readdirSync(OUT_DIR);
-  console.log("------------->READ DIR<--------------", dirss);
+  console.log("------------->READ DIR<--------------", { OUT_DIR });
 
   if (fs.existsSync(OUT_DIR)) {
     if (fs.lstatSync(OUT_DIR).isDirectory()) {
@@ -67,12 +66,14 @@ const generateTree = (outDir: string): TreeType[] | undefined => {
   return undefined;
 };
 
+const dirss = fs.readdirSync(process.cwd());
+console.log("------------->DIRECTORY CONTENT<--------------", { dirss });
 const outDir = path.resolve(process.cwd(), OUT_DIR);
 
 const tree = generateTree(outDir);
 
 export async function GET() {
   const dirs = fs.readdirSync(path.resolve(process.cwd()));
-  console.log("------------->READ DIR REUTURNED<--------------", dirs);
+  // console.log("------------->READ DIR REUTURNED<--------------", dirs);
   return NextResponse.json(tree);
 }
