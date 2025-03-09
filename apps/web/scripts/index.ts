@@ -51,8 +51,6 @@ export const generateTree = (outDir: string): TreeType[] => {
     dirs = fs.readdirSync(outDir);
   }
 
-  console.log("-----HERE-----", outDir, path.join(process.cwd(), outDir));
-
   for (let dir of dirs) {
     const filePath = path.join(outDir, dir);
     if (fs.lstatSync(filePath).isDirectory()) {
