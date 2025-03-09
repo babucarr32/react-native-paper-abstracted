@@ -3,6 +3,8 @@ import { BlockViewer } from "@/components/ui/block-viewer";
 import { mdxToHTML, SITE_URL } from "@/libs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 const item = { name: "shad" };
 
 const getDocs = (): Promise<string> => {
