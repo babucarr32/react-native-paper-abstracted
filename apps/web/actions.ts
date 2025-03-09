@@ -9,12 +9,12 @@ export async function getContent(filePath: string): Promise<{ raw: string; conte
       ? path.join("/vercel/path0/apps/web", filePath)
       : path.join(process.cwd(), filePath);
 
-    console.log("VERCEL ABSOLUTE", fs.readdir(absolutePath));
-    console.log("VERCEL PATH0", fs.readdir("/vercel/path0"));
-    console.log("VERCEL APPS", fs.readdir("/vercel/path0/apps"));
-    console.log("VERCEL WEB", fs.readdir("/vercel/path0/apps/web"));
+    console.log("VERCEL ABSOLUTE", fs.readdirSync(absolutePath));
+    console.log("VERCEL PATH0", fs.readdirSync("/vercel/path0"));
+    console.log("VERCEL APPS", fs.readdirSync("/vercel/path0/apps"));
+    console.log("VERCEL WEB", fs.readdirSync("/vercel/path0/apps/web"));
 
-    fs.readFile(absolutePath, { encoding: "utf8" }, async (err, data) => {
+    fs.readFile(path.join(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
