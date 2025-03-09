@@ -7,7 +7,8 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
-    "setup": "npx tsx ./scripts/index.ts",
+    "setup": "prebuild",
+    "prebuild": "npx tsx ./script/index.ts",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
