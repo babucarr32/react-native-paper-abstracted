@@ -436,7 +436,7 @@ function BlockViewer({
           <TabsTrigger value="explorer" asChild>
             <Button
               variant={"outline"}
-              className={cn("w-[100px] cursor-pointer h-10", current === "explorer" && "!bg-accent")}
+              className={cn("hidden md:block w-[100px] cursor-pointer h-10", current === "explorer" && "!bg-accent")}
             >
               Explorer
             </Button>

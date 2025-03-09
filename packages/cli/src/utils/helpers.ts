@@ -36,16 +36,26 @@ export const turboRed = hex(RED);
 export const turboBlue = hex(BLUE);
 export const turboYellow = hex(YELLOW);
 
-const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
+export const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
   const imports = sourceFile?.getImportDeclarations() || [];
   return imports.map((i) => i.getModuleSpecifier());
 };
 
-const updateImport = (moduleSpecifiers: StringLiteral[]) => {
+const updateImport = (moduleSpecifiers: StringLiteral[], alias?: string, filePath?: string) => {
   for (let s of moduleSpecifiers) {
     const literal = s.getLiteralValue();
     if (literal.includes("components/")) {
       const newImport = literal.split("components/").join("");
+      s.setLiteralValue(newImport);
+    }
+
+    if (alias && literal.includes("..")) {
+      const newImport = alias + literal.split("..").pop();
+      s.setLiteralValue(newImport);
+    }
+
+    if (filePath?.includes("index.tsx") && literal.startsWith("./") && alias) {
+      const newImport = alias + "/" + literal.split("./").pop();
       s.setLiteralValue(newImport);
     }
   }
@@ -169,6 +179,14 @@ export const handleSaveToFolder = async (
       await fs.mkdir(compOutDir, { recursive: true });
       const decodedContent = atob((fileContent as any).content);
       await handleCreateFile(decodedContent, filePath);
+
+      project.addSourceFileAtPath(filePath);
+      const sourceFile = project.getSourceFile(filePath);
+      // Get import statements
+      const moduleSpecifiers = getModuleSpecifier(sourceFile);
+      const importAlias = `@/${outDir}`;
+      updateImport(moduleSpecifiers, importAlias, filePath);
+      await sourceFile?.save();
 
       spinner.stop();
       console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
