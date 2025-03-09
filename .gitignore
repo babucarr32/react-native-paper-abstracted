@@ -42,6 +42,6 @@ packages/core/src/core/components
 
 packages/core/src/__patch__
 packages/core/src/__remote_components__
-apps/web/__componentss__
+apps/web/__components__
 packages/cli/src/*.js
 packages/core/scripts/*.js

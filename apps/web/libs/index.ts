@@ -34,3 +34,7 @@ export const mdxToHTML = async (content: string) => {
 
   return (String(file)); // <p>Hello, Next.js!</p>
 };
+
+export const SITE_URL = process.env.NODE_ENV === "production"
+  ? "https://react-native-paper-abstracted.vercel.app"
+  : "http://localhost:3000";

@@ -7,7 +7,7 @@ import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, 
 import { ImperativePanelHandle } from "react-resizable-panels";
 // import { registryItemFileSchema, registryItemSchema } from "shadcn/registry";
 import { z } from "zod";
-import { getContent } from "@/actions";
+// import { getContent } from "@/actions";
 
 import { trackEvent } from "@/components/lib/events";
 // import { FileTree, createFileTreeForRegistryItemFiles } from "@/lib/registry";
@@ -28,7 +28,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { highlightCode } from "@/libs";
+import { highlightCode, SITE_URL } from "@/libs";
 import { TreeType } from "@/scripts";
 import Docs from "../docs";
 import { cn } from "../lib/utils";
@@ -217,14 +217,22 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
     (async () => {
       if (activeFile) {
         setLoading(true);
-        getContent(activeFile).then((result) => {
-          const { raw, content } = result;
-          setFileContent(raw);
-          setCode(content);
-          setLoading(false);
-        }).catch((err) => {
-          setLoading(false);
-        });
+        const fetchContent = async () => {
+          try {
+            const response = await fetch(`${SITE_URL}/api/content`, {
+              method: "POST",
+              body: JSON.stringify({ path: activeFile }),
+            });
+            const { content, raw } = await response.json();
+            setCode(content);
+            setFileContent(raw);
+            setLoading(false);
+          } catch (err) {
+            setLoading(false);
+          }
+        };
+
+        fetchContent();
       }
     })();
   }, [activeFile]);
