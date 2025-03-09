@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "setup": "prebuild",
-    "prebuild": "npx tsx ./script/index.ts",
+    "prebuild": "npx tsx ./scripts/fetch-components.ts",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
