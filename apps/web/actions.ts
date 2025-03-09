@@ -1,6 +1,7 @@
 "use server";
 import fs from "fs-extra";
 import path from "path";
+
 import { highlightCode } from "./libs";
 
 export async function getContent(filePath: string): Promise<{ raw: string; content: string }> {

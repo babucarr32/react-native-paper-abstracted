@@ -4,6 +4,8 @@ import { OUT_DIR, generateTree } from "@/scripts/index";
 import { mdxToHTML } from "@/libs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 const item = { name: "shad" };
 
 const treeData = generateTree(OUT_DIR);
