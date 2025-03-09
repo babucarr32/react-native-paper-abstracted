@@ -19,8 +19,13 @@ const getDocs = (): Promise<string> => {
 };
 
 export default async function Page() {
-  const response = await fetch(`${SITE_URL}/api/tree`);
-  const treeData = await response.json();
+  let treeData;
+  try {
+    const response = await fetch(`${SITE_URL}/api/tree`);
+    treeData = await response.json();
+  } catch (err) {
+    treeData = [];
+  }
 
   const docs = await getDocs();
 
