@@ -28,6 +28,6 @@
     "node_modules",
     "__components__",
     "../../packages/core",
-    "../../packages/example",
+    "../../packages/example"
   ]
 }
