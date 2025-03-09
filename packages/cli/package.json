@@ -1,7 +1,12 @@
 {
   "name": "@react-native-paper-abstracted/cli",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
+  "homepage": "https://github.com/babucarr32/react-native-paper-abstracted",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/babucarr32/react-native-paper-abstracted"
+  },
   "bin": {
     "rnpa": "./dist/index.js"
   },

@@ -11,7 +11,7 @@ const plugins = [];
 
 /** @type {NextConfig} */
 const nextConfig = {
-  output: "export",
+  // output: "export",
   cleanDistDir: true,
   images: { unoptimized: true },
   reactStrictMode: true,
