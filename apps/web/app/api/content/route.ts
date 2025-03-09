@@ -6,7 +6,7 @@ import { highlightCode } from "@/libs";
 
 async function getContent(filePath: string): Promise<{ raw: string; content: string }> {
   return new Promise((resolve, reject) => {
-    fs.readFile(path.join(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
+    fs.readFile(path.resolve(filePath), { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
