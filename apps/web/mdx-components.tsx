@@ -1,27 +1,28 @@
 import type { MDXComponents } from "mdx/types";
 import Image, { ImageProps } from "next/image";
 
+type PropType = any;
+
 export function useMDXComponents(components: MDXComponents): MDXComponents {
-  console.log({ components });
   return {
     // Allows customizing built-in components, e.g. to add styling.
-    h1: ({ children }) => <h1 className="text-3xl font-bold mb-4">{children}</h1>,
-    h2: ({ children }) => <h2 className="text-2xl font-bold mt-2">{children}</h2>,
-    h3: ({ children }) => <h3 className="font-bold my-3">{children}</h3>,
-    h4: ({ children }) => <h4 className="font-bold my-4 mt-6">{children}</h4>,
+    h1: ({ children }: PropType) => <h1 className="text-3xl font-bold mb-4">{children}</h1>,
+    h2: ({ children }: PropType) => <h2 className="text-2xl font-bold mt-2">{children}</h2>,
+    h3: ({ children }: PropType) => <h3 className="font-bold my-3">{children}</h3>,
+    h4: ({ children }: PropType) => <h4 className="font-bold my-4 mt-6">{children}</h4>,
     hr: () => <hr className="my-3" />,
-    p: ({ children }) => <p className="my-5">{children}</p>,
-    a: ({ children, href }) => <a href={href} className="text-blue-500">{children}</a>,
-    ul: ({ children }) => <ul className="my-4">{children}</ul>,
-    li: ({ children }) => <li className="my-2">{children}</li>,
-    img: (props) => (
+    p: ({ children }: PropType) => <p className="my-5">{children}</p>,
+    a: ({ children, href }: PropType & { href: string }) => <a href={href} className="text-blue-500">{children}</a>,
+    ul: ({ children }: PropType) => <ul className="my-4">{children}</ul>,
+    li: ({ children }: PropType) => <li className="my-2">{children}</li>,
+    img: (props: any) => (
       <Image
         sizes="100vw"
         style={{ width: "100%", height: "auto" }}
         {...(props as ImageProps)}
       />
     ),
-    pre: ({ children }) => (
+    pre: ({ children }: PropType) => (
       <pre
         style={{
           fontFamily: "var(--font-geist-mono)",
