@@ -17,6 +17,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   pageExtensions: ["md", "mdx", "tsx", "ts", "jsx", "js"],
+  outputFileTracingIncludes: {
+    // This will include the __components__ folder for all pages
+    "/**/*": ["./__components__/**/*"],
+  },
 };
 
 /** @type {import('rehype-pretty-code').Options} */
