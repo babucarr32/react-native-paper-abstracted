@@ -28,6 +28,7 @@ export default async function Page() {
   }
 
   const docs = await getDocs();
+  console.log("------------->TREE DATA<----------", { treeData });
 
   return (
     <div className="px-8 py-4">
