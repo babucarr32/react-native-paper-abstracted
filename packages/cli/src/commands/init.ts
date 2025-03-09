@@ -2,10 +2,13 @@ import fs from "node:fs";
 import pc from "picocolors";
 import path from "node:path";
 
-import { handleCreateConfigFile, initializingSpinner } from "../utils/helpers.js";
+import { initProject } from "../utils/index.js";
+import { _spinner } from "../utils/spinners.js";
 import { RNPAConfig } from "../../rnpa.config.js";
-import { initProject } from "../utils/git.js";
-import { createConfigPrompter, overrideConfigPrompter, prompter } from "../utils/prompts.js";
+import { handleCreateConfigFile } from "../utils/index.js";
+import { createConfigPrompter, overrideConfigPrompter, prompter } from "../utils/index.js";
+
+const spinner = _spinner();
 
 export const init = async () => {
   const configPath = path.join(process.cwd(), "rnpaconfig.json");
@@ -53,5 +56,5 @@ export const init = async () => {
     }
   }
 
-  initProject(componentOutDir, initializingSpinner);
+  initProject(componentOutDir, spinner);
 };

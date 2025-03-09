@@ -2,9 +2,11 @@ import fs from "node:fs";
 import pc from "picocolors";
 import path from "node:path";
 
-import { spinner } from "../utils/helpers.js";
+import { _spinner } from "../utils/spinners.js";
 import { RNPAConfig } from "../../rnpa.config.js";
 import { handleSaveToFolder } from "../utils/index.js";
+
+const spinner = _spinner();
 
 export const add = async (str: string) => {
   const configPath = path.join(process.cwd(), "rnpaconfig.json");
@@ -23,11 +25,9 @@ export const add = async (str: string) => {
     }
 
     const installedPath = await handleSaveToFolder(outDir, str, (progress) => {
-      spinner.start();
+      spinner.fetch();
       if (progress === 100) spinner.succeed("Done");
     });
-
-    // const componentPath = await cloneSpecificFolder(outDir, str, spinner);
 
     if (installedPath) {
       console.log(`${pc.green("✔︎")} ${pc.bold("Output Dir")}: ${pc.cyan(installedPath)}`);

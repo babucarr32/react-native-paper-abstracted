@@ -4,10 +4,11 @@ import pc from "picocolors";
 import { exec } from "child_process";
 
 import { promisify } from "util";
+import { _spinner } from "./spinners.js";
+import { processDirectory } from "./index.js";
 import { OWNER, REPO, REPO_CORE } from "./constants.js";
 
-import { initializingSpinner, processDirectory, settingUpSpinner, spinner } from "./helpers.js";
-
+const spinner = _spinner();
 const execAsync = promisify(exec);
 
 const cloneRepo = async (repoName: string, targetPath: string, sparsePath: string, otherSparsePath = "") => {
@@ -19,7 +20,7 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
   );
 };
 
-export const initProject = async (outDir: string, spinner: any) => {
+export const initProject = async (outDir: string, spinner: ReturnType<typeof _spinner>) => {
   let tempCoreDir: string = "";
 
   try {
@@ -100,8 +101,6 @@ const removeTestFiles = async (filePath: string) => {
 };
 
 const stopSpinners = () => {
-  initializingSpinner.stop();
-  settingUpSpinner.stop();
   spinner.stop();
 };
 
@@ -109,7 +108,7 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
   let tempDir: string = "";
   // return;
   try {
-    initializingSpinner.start();
+    spinner.initialize();
     // Create the base output directory
     fs.mkdirSync(outDir, { recursive: true });
 
@@ -119,20 +118,16 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
     fs.mkdirSync(tempDir);
-    initializingSpinner.succeed();
+    spinner.succeed();
 
     // Get components
-    spinner.start();
+    spinner.fetch("Fetching components...");
     await cloneRepo(REPO, tempDir, remoteComponentFolderPath, otherSparses);
     spinner.succeed("Fetching: Done...");
 
-    settingUpSpinner.start();
+    spinner.start("Setting up...");
     // Set up component directory
     const componentDir = outDir;
-
-    // if (fs.existsSync(componentDir)) {
-    //   fs.rmSync(componentDir, { recursive: true, force: true });
-    // }
 
     fs.mkdirSync(componentDir, { recursive: true });
 
@@ -159,14 +154,14 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
     // Cleanup and process
     fs.rmSync(tempDir, { recursive: true, force: true });
 
-    processDirectory([...sparses, remoteComponentFolderPath]);
+    await processDirectory([...sparses, remoteComponentFolderPath]);
 
     removeTestFiles(componentDir);
-    settingUpSpinner.succeed("Setting up: Done...");
+    spinner.succeed("Setting up: Done...");
     return componentDir;
   } catch (error: any) {
-    // Stop all spinners
-    stopSpinners();
+    // Stop spinners
+    spinner.stop();
     // Clean up both temp directories if they exist
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
