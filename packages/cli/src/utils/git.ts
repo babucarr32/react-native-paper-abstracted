@@ -18,7 +18,6 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
   await execAsync(
     `cd ${targetPath} && git sparse-checkout set ${sparsePath} ${otherSparsePath} --skip-checks`,
   );
-  console.log("===============>", path.join(process.cwd(), targetPath), "<=================");
 };
 
 const CORE_COMPONENTS = [
