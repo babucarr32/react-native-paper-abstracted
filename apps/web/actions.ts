@@ -22,11 +22,15 @@ export async function getContent(filePath: string): Promise<{ raw: string; conte
     // }).catch((err) => {
     //   console.log("----VERCEL ERRRR", err);
     // });
+    //
 
-    fs.readFile(filePath, { encoding: "utf8" }, async (err, data) => {
+    console.log("GEttinh", filePath);
+
+    fs.readFile(path.resolve(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
+      console.log("===========", data);
       const template = `
 \`\`\`ts
 ${data}

@@ -7,6 +7,7 @@ import path from "path";
 const item = { name: "shad" };
 
 const treeData = generateTree(OUT_DIR) || [];
+console.log({ treeData });
 
 const getDocs = (): Promise<string> => {
   return new Promise((resolve, reject) => {
