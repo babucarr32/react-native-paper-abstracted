@@ -6,7 +6,7 @@ import { highlightCode } from "@/libs";
 
 async function getContent(filePath: string): Promise<{ raw: string; content: string }> {
   return new Promise((resolve, reject) => {
-    fs.readFile(path.join(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
+    fs.readFile(path.resolve(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
   const req = await request.json();
 
   const { path } = req;
-  console.log({ path });
   const content = await getContent(path);
+  console.log(content);
 
   return NextResponse.json(content);
 }

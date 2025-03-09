@@ -74,6 +74,6 @@ const tree = generateTree(outDir);
 
 export async function GET() {
   const dirs = fs.readdirSync(path.resolve(process.cwd()));
-  // console.log("------------->READ DIR REUTURNED<--------------", dirs);
+  console.log("------------->READ DIR REUTURNED<--------------", tree);
   return NextResponse.json(tree);
 }
