@@ -7,7 +7,7 @@ import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, 
 import { ImperativePanelHandle } from "react-resizable-panels";
 // import { registryItemFileSchema, registryItemSchema } from "shadcn/registry";
 import { z } from "zod";
-import { getContent } from "@/actions";
+import { ContentType, getContent } from "@/actions";
 
 import { trackEvent } from "@/components/lib/events";
 // import { FileTree, createFileTreeForRegistryItemFiles } from "@/lib/registry";
@@ -50,9 +50,13 @@ type BlockViewerContext = {
   style?: any;
   setStyle: (style: any) => void;
   activeFile: string | null;
+  activeFolder: string;
   preview?: boolean;
   fileContent?: string;
+  hasClickedOnFolder: boolean;
   setFileContent: React.Dispatch<React.SetStateAction<string>>;
+  setActiveFolder: React.Dispatch<React.SetStateAction<string>>;
+  setHasClickedOnFolder: React.Dispatch<React.SetStateAction<boolean>>;
   togglePreview?: () => void;
   setActiveFile: (file: string) => void;
   resizablePanelRef: React.RefObject<ImperativePanelHandle> | null;
@@ -84,6 +88,8 @@ function BlockViewerProvider({
 }) {
   const [preview, setPreview] = React.useState(false);
   const [fileContent, setFileContent] = React.useState("");
+  const [activeFolder, setActiveFolder] = React.useState("");
+  const [hasClickedOnFolder, setHasClickedOnFolder] = React.useState(false);
   const [view, setView] = React.useState<BlockViewerContext["view"]>("preview");
   // const [style, setStyle] = React.useState<BlockViewerContext["style"]>("new-york");
   const [style, setStyle] = React.useState<BlockViewerContext["style"]>("");
@@ -108,10 +114,14 @@ function BlockViewerProvider({
         setStyle,
         activeFile,
         fileContent,
+        activeFolder,
         togglePreview,
         setActiveFile,
         setFileContent,
+        setActiveFolder,
         highlightedFiles,
+        hasClickedOnFolder,
+        setHasClickedOnFolder,
         resizablePanelRef: resizablePanelRef as any,
       }}
     >
@@ -211,23 +221,51 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
   const posthog = usePostHog();
   const [code, setCode] = React.useState("");
   const [loading, setLoading] = React.useState(true);
-  const { activeFile, preview, setFileContent } = useBlockViewer();
+  const { activeFile, preview, activeFolder, setFileContent, hasClickedOnFolder } = useBlockViewer();
+  const [cache, setCache] = React.useState<Map<string, ContentType>>(new Map());
 
   React.useEffect(() => {
     (async () => {
-      if (activeFile) {
-        setLoading(true);
-        getContent(activeFile).then((result) => {
-          const { raw, content } = result;
-          setFileContent(raw);
+      if (activeFile && !hasClickedOnFolder) {
+        // Get data from the cache if available
+        const { content, raw } = cache.get(activeFile) || {};
+        if (content && raw) {
           setCode(content);
+          setCode(content as string);
           setLoading(false);
-        }).catch((err) => {
-          setLoading(false);
-        });
+        } else {
+          setLoading(true);
+          getContent<undefined>(activeFile).then((result) => {
+            const { raw, content } = result || {};
+            setFileContent(raw as string);
+            setCode(content as string);
+            setLoading(false);
+          }).catch((err) => {
+            setLoading(false);
+          });
+        }
+      } else {
+        if (activeFolder) {
+          getContent("", activeFolder).then((data) => {
+            // Data might be {}
+            if (Object.keys(data)) {
+              setCache((prev) => {
+                const newMap = new Map(prev);
+                const entries = Object.entries(data);
+                for (const [key, value] of entries) {
+                  newMap.set(key, value);
+                }
+                return newMap;
+              });
+              setLoading(false);
+            }
+          }).catch((err) => {
+            setLoading(false);
+          });
+        }
       }
     })();
-  }, [activeFile]);
+  }, [activeFile, activeFolder, hasClickedOnFolder]);
 
   const currentFilePath = activeFile?.split("__/").pop();
 
@@ -339,7 +377,7 @@ const FolderIcon = () => {
   );
 };
 function Tree({ item, index }: { item: FileTree; index: number }) {
-  const { activeFile, setActiveFile } = useBlockViewer();
+  const { activeFile, setActiveFile, setActiveFolder, setHasClickedOnFolder } = useBlockViewer();
 
   if (!item.children) {
     const isTSFile = item.path?.split(".").pop() === "ts";
@@ -347,7 +385,10 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
       <SidebarMenuItem>
         <SidebarMenuButton
           isActive={item.path === activeFile}
-          onClick={() => item.path && setActiveFile(item.path)}
+          onClick={() => {
+            item.path && setActiveFile(item.path);
+            setHasClickedOnFolder(false);
+          }}
           className="whitespace-nowrap rounded-none pl-[--index] hover:bg-zinc-700 hover:text-white focus:bg-zinc-700 focus:text-white focus-visible:bg-zinc-700 focus-visible:text-white active:bg-zinc-700 active:text-white data-[active=true]:bg-zinc-700 data-[active=true]:text-white"
           data-index={index}
           style={{
@@ -370,6 +411,10 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
       >
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
+            onClick={() => {
+              setActiveFolder(item.path || "");
+              setHasClickedOnFolder(true);
+            }}
             className="whitespace-nowrap rounded-none hover:bg-zinc-700 hover:text-white focus-visible:bg-zinc-700 focus-visible:text-white active:bg-zinc-700 active:text-white data-[active=true]:bg-zinc-700 data-[active=true]:text-white data-[state=open]:hover:bg-zinc-700 data-[state=open]:hover:text-white"
             style={{
               paddingLeft: `${index * (index === 1 ? 1 : 1.3)}rem`,
