@@ -39,7 +39,7 @@ export const turboRed = hex(RED);
 export const turboBlue = hex(BLUE);
 export const turboYellow = hex(YELLOW);
 
-export const isDir = (dir: string) => {
+export const isDir = (dir: string | Buffer<ArrayBufferLike>) => {
   return fileSystem.lstatSync(dir).isDirectory();
 };
 

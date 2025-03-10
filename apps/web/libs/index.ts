@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -33,4 +34,12 @@ export const mdxToHTML = async (content: string) => {
     .process(content);
 
   return (String(file)); // <p>Hello, Next.js!</p>
+};
+
+export const isDir = (dir: string | Buffer<ArrayBufferLike>) => {
+  return fs.lstatSync(dir).isDirectory();
+};
+
+export const isFile = (dir: string) => {
+  return fs.lstatSync(dir).isFile();
 };
