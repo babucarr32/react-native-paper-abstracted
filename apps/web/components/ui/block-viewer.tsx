@@ -246,7 +246,9 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
         }
       } else {
         if (activeFolder) {
+          console.log({ activeFolder });
           getContent("", activeFolder).then((data) => {
+            console.log(data);
             // Data might be {}
             if (Object.keys(data)) {
               setCache((prev) => {
