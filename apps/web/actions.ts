@@ -11,8 +11,9 @@ type ContentReturnType<T extends string | undefined> = Promise<
 >;
 
 const handleReadFile = async (filePath: string): Promise<ContentType> => {
+  console.log("---", filePath);
   return new Promise((resolve, reject) => {
-    fs.readFile(path.resolve(process.cwd(), filePath), { encoding: "utf8" }, async (err, data) => {
+    fs.readFile(filePath, { encoding: "utf8" }, async (err, data) => {
       if (err) {
         reject(err);
       }
