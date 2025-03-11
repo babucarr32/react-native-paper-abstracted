@@ -55,16 +55,17 @@ export const generateTree = (outDir: string): TreeType[] | undefined => {
   }
 
   for (let dir of dirs) {
-    const filePath = path.join(outputDirectory, dir);
-    if (fs.lstatSync(filePath).isDirectory()) {
+    const absoluteFilePath = path.join(outputDirectory, dir);
+    const relativeFilePath = path.join(outDir, dir);
+    if (fs.lstatSync(absoluteFilePath).isDirectory()) {
       tree.push({
         name: dir,
-        path: filePath,
-        children: getDirs(filePath),
+        path: relativeFilePath,
+        children: getDirs(relativeFilePath),
       });
     }
 
-    generateTree(filePath);
+    generateTree(absoluteFilePath);
   }
   return tree;
 };
