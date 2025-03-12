@@ -140,11 +140,19 @@ function BlockViewerProvider({
 
 function BlockViewerToolbar() {
   const posthog = usePostHog();
-  const { setView, togglePreview, item, resizablePanelRef, style, activeFile } = useBlockViewer();
+  const { setView, togglePreview, item, resizablePanelRef, style, activeFolder } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
-  const componentName = activeFile?.split("/")[2]?.split(".")[0] || "";
-  const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+  const componentName = activeFolder?.split("/").pop() || "";
+  let activeComponentName = "";
+
+  const NONE_COMPONENTS = ["core", "styles", "utils"];
+  const CORE_COMPONENT = ["components", ...NONE_COMPONENTS];
+
+  if (!CORE_COMPONENT.includes(componentName) && !NONE_COMPONENTS.some((i) => activeFolder.includes(i))) {
+    activeComponentName = componentName;
+  }
+  // const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
 
   return (
     <div className="flex w-full items-center gap-2 md:pr-[14px]">
@@ -159,6 +167,7 @@ function BlockViewerToolbar() {
         <div className="flex items-center gap-1 rounded-xl border p-[2px]">
           <Button
             variant="ghost"
+            disabled={!activeComponentName}
             className="hidden !h-9 w-auto gap-1 !rounded-xl px-2 md:flex lg:w-auto"
             onClick={() => {
               copyToClipboard(`npx rnpa add ${activeComponentName}`);
@@ -386,7 +395,10 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
         <SidebarMenuButton
           isActive={item.path === activeFile}
           onClick={() => {
-            item.path && setActiveFile(item.path);
+            if (item.path) {
+              setActiveFile(item.path);
+              setActiveFolder(item.path.split("/").slice(0, -1).join("/"));
+            }
             setHasClickedOnFolder(false);
           }}
           className="whitespace-nowrap rounded-none pl-[--index] hover:bg-zinc-700 hover:text-white focus:bg-zinc-700 focus:text-white focus-visible:bg-zinc-700 focus-visible:text-white active:bg-zinc-700 active:text-white data-[active=true]:bg-zinc-700 data-[active=true]:text-white"
