@@ -27,6 +27,7 @@ const CORE_COMPONENTS = [
   "packages/core/src/components/MaterialCommunityIcon",
   "packages/core/src/components/Portal",
   "packages/core/src/types.tsx",
+  "packages/core/src/constants.tsx",
 ];
 const OTHER_SPARSES = CORE_COMPONENTS.slice(1).join(" ");
 

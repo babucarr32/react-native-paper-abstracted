@@ -63,6 +63,11 @@ export const generateTree = (outDir: string): TreeType[] | undefined => {
         path: relativeFilePath,
         children: getDirs(relativeFilePath),
       });
+    } else {
+      tree.push({
+        name: dir,
+        path: relativeFilePath,
+      });
     }
 
     generateTree(absoluteFilePath);
