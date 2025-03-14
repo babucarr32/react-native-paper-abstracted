@@ -12,5 +12,6 @@ program.command("init")
 program.command("add")
   .description("Add a new component")
   .argument("<string>", "Component name")
-  .action(add)
-  .version("0.0.1");
+  .action(add);
+
+program.version("0.0.5");

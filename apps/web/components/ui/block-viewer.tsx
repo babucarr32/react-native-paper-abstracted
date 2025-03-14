@@ -196,12 +196,12 @@ function BlockViewerToolbar() {
   );
 }
 
-const Preview = () => {
+const Preview = ({ src }: { src: string }) => {
   return (
     <div className="w-[400px]  border-l border-zinc-700 h-full">
       <div className="flex h-12 items-center border-b border-zinc-700 bg-zinc-900" />
       <div className="p-2 ">
-        <Image src={"images/phone.png"} alt="Component image" height={900} width={400} // https://www.vecteezy.com/members/phanithi
+        <Image src={src} alt="Component image" height={900} width={400} // https://www.vecteezy.com/members/phanithi
         />
       </div>
     </div>
@@ -278,8 +278,17 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
 
   const currentFilePath = activeFile?.split("__/").pop();
 
-  const componentName = activeFile?.split("/")[2]?.split(".")[0] || "";
-  const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+  const componentName = activeFolder?.split("/").pop() || "";
+  let activeComponentName = "";
+
+  const NONE_COMPONENTS = ["core", "styles", "utils"];
+  const CORE_COMPONENT = ["components", ...NONE_COMPONENTS];
+
+  if (!CORE_COMPONENT.includes(componentName) && !NONE_COMPONENTS.some((i) => activeFolder.includes(i))) {
+    activeComponentName = componentName;
+  }
+  // const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+  const imageName = activeComponentName.charAt(0).toLocaleLowerCase() + activeComponentName.slice(1);
 
   return (
     <div className="mr-[14px] border-r border-b flex overflow-hidden rounded-xl bg-zinc-950 text-white group-data-[view=preview]/block-view-wrapper:hidden md:h-screen">
@@ -313,7 +322,11 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
         </ConditionalLoadingRenderer>
       </div>
       {preview
-        ? <Preview />
+        ? (
+          <Preview
+            src={`images/${imageName}.png`}
+          />
+        )
         : ""}
     </div>
   );
