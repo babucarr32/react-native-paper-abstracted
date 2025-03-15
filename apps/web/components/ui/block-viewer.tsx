@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, Loader } from "lucide-react";
+import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, Loader, FileCode2 } from "lucide-react";
 import { ImperativePanelHandle } from "react-resizable-panels";
 // import { registryItemFileSchema, registryItemSchema } from "shadcn/registry";
 import { z } from "zod";
@@ -33,6 +33,7 @@ import { TreeType } from "@/scripts";
 import Docs from "../docs";
 import { cn } from "../lib/utils";
 import { usePostHog } from "posthog-js/react";
+import { isDragActive } from "motion/react";
 // import { Style } from "@/registry/registry-styles";
 
 const V0Button = () => <Button>V0Button</Button>;
@@ -52,10 +53,12 @@ type BlockViewerContext = {
   activeFile: string | null;
   activeFolder: string;
   preview?: boolean;
+  viewExample?: boolean;
   fileContent?: string;
   hasClickedOnFolder: boolean;
   setFileContent: React.Dispatch<React.SetStateAction<string>>;
   setActiveFolder: React.Dispatch<React.SetStateAction<string>>;
+  setViewExample: React.Dispatch<React.SetStateAction<boolean>>;
   setHasClickedOnFolder: React.Dispatch<React.SetStateAction<boolean>>;
   togglePreview?: () => void;
   setActiveFile: (file: string) => void;
@@ -88,10 +91,10 @@ function BlockViewerProvider({
 }) {
   const [preview, setPreview] = React.useState(false);
   const [fileContent, setFileContent] = React.useState("");
-  const [activeFolder, setActiveFolder] = React.useState("");
+  const [activeFolder, setActiveFolder] = React.useState("__components__/components/ActivityIndicator");
+  const [viewExample, setViewExample] = React.useState(false);
   const [hasClickedOnFolder, setHasClickedOnFolder] = React.useState(false);
   const [view, setView] = React.useState<BlockViewerContext["view"]>("preview");
-  // const [style, setStyle] = React.useState<BlockViewerContext["style"]>("new-york");
   const [style, setStyle] = React.useState<BlockViewerContext["style"]>("");
   const [activeFile, setActiveFile] = React.useState<
     BlockViewerContext["activeFile"]
@@ -114,9 +117,11 @@ function BlockViewerProvider({
         setStyle,
         activeFile,
         fileContent,
+        viewExample,
         activeFolder,
         togglePreview,
         setActiveFile,
+        setViewExample,
         setFileContent,
         setActiveFolder,
         highlightedFiles,
@@ -140,7 +145,7 @@ function BlockViewerProvider({
 
 function BlockViewerToolbar() {
   const posthog = usePostHog();
-  const { setView, togglePreview, item, resizablePanelRef, style, activeFolder } = useBlockViewer();
+  const { togglePreview, item, activeFolder } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
   const componentName = activeFolder?.split("/").pop() || "";
@@ -152,7 +157,6 @@ function BlockViewerToolbar() {
   if (!CORE_COMPONENT.includes(componentName) && !NONE_COMPONENTS.some((i) => activeFolder.includes(i))) {
     activeComponentName = componentName;
   }
-  // const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
 
   return (
     <div className="flex w-full items-center gap-2 md:pr-[14px]">
@@ -198,7 +202,7 @@ function BlockViewerToolbar() {
 
 const Preview = ({ src }: { src: string }) => {
   return (
-    <div className="w-[400px]  border-l border-zinc-700 h-full">
+    <div className="w-[350px] 2xl:w-[400px]  border-l border-zinc-700 h-full">
       <div className="flex h-12 items-center border-b border-zinc-700 bg-zinc-900" />
       <div className="p-2 ">
         <Image src={src} alt="Component image" height={900} width={400} // https://www.vecteezy.com/members/phanithi
@@ -226,55 +230,25 @@ const LoadingSpinner = () => (
   </div>
 );
 
+function camelToKebab(str: string): string {
+  return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+}
+
 function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
   const posthog = usePostHog();
   const [code, setCode] = React.useState("");
   const [loading, setLoading] = React.useState(true);
-  const { activeFile, preview, activeFolder, setFileContent, hasClickedOnFolder } = useBlockViewer();
+  const {
+    activeFile,
+    viewExample,
+    setViewExample,
+    preview,
+    setActiveFile,
+    activeFolder,
+    setFileContent,
+    hasClickedOnFolder,
+  } = useBlockViewer();
   const [cache, setCache] = React.useState<Map<string, ContentType>>(new Map());
-
-  React.useEffect(() => {
-    (async () => {
-      if (activeFile && !hasClickedOnFolder) {
-        // Get data from the cache if available
-        const { content, raw } = cache.get(activeFile) || {};
-        if (content && raw) {
-          setCode(content);
-          setCode(content as string);
-          setLoading(false);
-        } else {
-          setLoading(true);
-          getContent<undefined>(activeFile).then((result) => {
-            const { raw, content } = result || {};
-            setFileContent(raw as string);
-            setCode(content as string);
-            setLoading(false);
-          }).catch((err) => {
-            setLoading(false);
-          });
-        }
-      } else {
-        if (activeFolder) {
-          getContent("", activeFolder).then((data) => {
-            // Data might be {}
-            if (Object.keys(data)) {
-              setCache((prev) => {
-                const newMap = new Map(prev);
-                const entries = Object.entries(data);
-                for (const [key, value] of entries) {
-                  newMap.set(key, value);
-                }
-                return newMap;
-              });
-              setLoading(false);
-            }
-          }).catch((err) => {
-            setLoading(false);
-          });
-        }
-      }
-    })();
-  }, [activeFile, activeFolder, hasClickedOnFolder]);
 
   const currentFilePath = activeFile?.split("__/").pop();
 
@@ -287,8 +261,73 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
   if (!CORE_COMPONENT.includes(componentName) && !NONE_COMPONENTS.some((i) => activeFolder.includes(i))) {
     activeComponentName = componentName;
   }
-  // const activeComponentName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
-  const imageName = activeComponentName.charAt(0).toLocaleLowerCase() + activeComponentName.slice(1);
+  const compName = activeComponentName.charAt(0).toLocaleLowerCase() + activeComponentName.slice(1);
+
+  React.useEffect(() => {
+    (async () => {
+      const kebabCase = camelToKebab(compName);
+      const codeSamplePath = `__examples__/${kebabCase}.tsx`;
+      if (viewExample) {
+        const { content, raw } = cache.get(codeSamplePath) || {};
+        if (content && raw) {
+          setCode(content as string);
+          setFileContent(raw as string);
+        }
+      } else {
+        if (activeFile && !hasClickedOnFolder) {
+          // Get data from the cache if available
+          const { content, raw } = cache.get(activeFile) || {};
+          if (content && raw) {
+            setCode(content);
+            setFileContent(raw as string);
+            setLoading(false);
+          } else {
+            // Data not found in cache. So fetch.
+            setLoading(true);
+            getContent<undefined>(activeFile).then((result) => {
+              const { raw, content } = result || {};
+              setFileContent(raw as string);
+              setCode(content as string);
+              setLoading(false);
+            }).catch((err) => {
+              setLoading(false);
+            });
+          }
+        } else {
+          if (activeFolder) {
+            getContent("", activeFolder).then((data) => {
+              // Data might be {}
+              if (Object.keys(data)) {
+                setCache((prev) => {
+                  const newMap = new Map(prev);
+                  const entries = Object.entries(data);
+                  for (const [key, value] of entries) {
+                    newMap.set(key, value);
+                  }
+                  return newMap;
+                });
+                setLoading(false);
+              }
+            }).catch((err) => {
+              setLoading(false);
+            });
+
+            if (compName) {
+              getContent<undefined>(codeSamplePath).then((result) => {
+                setCache((prev) => {
+                  const newMap = new Map(prev);
+                  newMap.set(codeSamplePath, result);
+                  return newMap;
+                });
+              }).catch((err) => {
+                console.log(err);
+              });
+            }
+          }
+        }
+      }
+    })();
+  }, [activeFile, viewExample, activeFolder, compName, hasClickedOnFolder]);
 
   return (
     <div className="mr-[14px] border-r border-b flex overflow-hidden rounded-xl bg-zinc-950 text-white group-data-[view=preview]/block-view-wrapper:hidden md:h-screen">
@@ -300,15 +339,31 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
           <File className="size-4" />
           {currentFilePath}
 
-          <Link
-            onClick={() => posthog.capture("visit_component_docs")}
-            href={`https://callstack.github.io/react-native-paper/docs/components/${activeComponentName}/`}
-            target="_blank"
-            className="ml-10 flex gap-2 items-center"
+          <RenderIfTruthy isTrue={Boolean(activeComponentName)}>
+            <Link
+              target="_blank"
+              className="ml-10 flex gap-2 items-center"
+              onClick={() => posthog.capture("visit_component_docs")}
+              href={`https://callstack.github.io/react-native-paper/docs/components/${activeComponentName}/`}
+            >
+              <Send className="size-4" />
+              Docs for {activeComponentName}
+            </Link>
+          </RenderIfTruthy>
+
+          <Button
+            variant={"ghost"}
+            disabled={!activeComponentName}
+            className={cn("ml-10 cursor-pointer", viewExample && "text-blue-500")}
+            onClick={() => {
+              setViewExample(true);
+            }}
+            style={{ backgroundColor: "transparent" }}
           >
-            <Send className="size-4" />
-            Docs for {componentName}
-          </Link>
+            <FileCode2 className="size-4" />
+            Example
+          </Button>
+
           <div className="ml-auto flex items-center gap-2">
             <BlockCopyCodeButton />
           </div>
@@ -324,7 +379,7 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
       {preview
         ? (
           <Preview
-            src={`images/${imageName}.png`}
+            src={`images/${compName}.png`}
           />
         )
         : ""}
@@ -399,7 +454,7 @@ const FolderIcon = () => {
   );
 };
 function Tree({ item, index }: { item: FileTree; index: number }) {
-  const { activeFile, setActiveFile, setActiveFolder, setHasClickedOnFolder } = useBlockViewer();
+  const { setViewExample, activeFile, setActiveFile, setActiveFolder, setHasClickedOnFolder } = useBlockViewer();
 
   if (!item.children) {
     const isTSFile = item.path?.split(".").pop() === "ts";
@@ -409,6 +464,7 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
           isActive={item.path === activeFile}
           onClick={() => {
             if (item.path) {
+              setViewExample(false);
               setActiveFile(item.path);
               setActiveFolder(item.path.split("/").slice(0, -1).join("/"));
             }
@@ -439,7 +495,9 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
             onClick={() => {
               setActiveFolder(item.path || "");
               setHasClickedOnFolder(true);
+              setViewExample(false);
             }}
+            isActive={activeFile?.includes(item?.path || "")}
             className="whitespace-nowrap rounded-none hover:bg-zinc-700 hover:text-white focus-visible:bg-zinc-700 focus-visible:text-white active:bg-zinc-700 active:text-white data-[active=true]:bg-zinc-700 data-[active=true]:text-white data-[state=open]:hover:bg-zinc-700 data-[state=open]:hover:text-white"
             style={{
               paddingLeft: `${index * (index === 1 ? 1 : 1.3)}rem`,
@@ -479,6 +537,11 @@ function BlockCopyCodeButton() {
   );
 }
 
+const RenderIfTruthy = ({ isTrue, children }: { isTrue: boolean; children: React.ReactNode }) => {
+  if (isTrue) return <>{children}</>;
+  return "";
+};
+
 function BlockViewer({
   item,
   tree,
@@ -494,7 +557,6 @@ function BlockViewer({
 }) {
   const posthog = usePostHog();
   const [current, setCurrent] = React.useState("docs");
-  console.log({ current });
   return (
     <BlockViewerProvider
       item={item}
@@ -525,7 +587,9 @@ function BlockViewer({
             </Button>
           </TabsTrigger>
           <div className="flex-1 flex justify-end">
-            <BlockViewerToolbar />
+            <RenderIfTruthy isTrue={current === "explorer"}>
+              <BlockViewerToolbar />
+            </RenderIfTruthy>
           </div>
         </TabsList>
         <TabsContent value="docs">

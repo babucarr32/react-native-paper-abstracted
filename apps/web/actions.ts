@@ -17,7 +17,7 @@ const handleReadFile = async (filePath: string): Promise<ContentType> => {
         reject(err);
       }
       const template = `
-\`\`\`ts
+\`\`\`ts showLineNumbers
 ${data}
 \`\`\`
 `;

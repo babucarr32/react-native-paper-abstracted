@@ -27,7 +27,7 @@ export default async function Page() {
   const docs = await getDocs();
 
   return (
-    <div className="px-8 py-4">
+    <div className="p-4 md:px-8 py-4">
       <BlockViewer item={item} highlightedFiles={null} tree={null} code={""} treeData={treeData} docs={docs} />
     </div>
   );
