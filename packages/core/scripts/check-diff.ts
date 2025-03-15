@@ -4,7 +4,7 @@ import fs from "fs-extra";
 import pc from "picocolors";
 import { createTwoFilesPatch } from "diff";
 import { cloneSpecificFolder } from "@react-native-paper-abstracted/cli/src/utils";
-import { remoteDirs } from "@react-native-paper-abstracted/cli/src/utils/constants";
+import { remoteDirs, REPO } from "@react-native-paper-abstracted/cli/src/utils/constants";
 
 const REMOTE_COMPONENTS = "__remote_components__";
 const PATCH_DIR = "__patch__";
@@ -30,7 +30,13 @@ const diff = async () => {
 
     if (clone) {
       // Fetch components from remote source
-      await cloneSpecificFolder(path.join(outDir), remoteComponentFolderPath, allDirs);
+      await cloneSpecificFolder({
+        repo: REPO,
+        otherSparses: allDirs,
+        outDir: path.join(outDir),
+        unwantedFolders: ["src/components/scripts"],
+        remoteComponentFolderPath: remoteComponentFolderPath,
+      });
     }
 
     const currentComponentsPath = path.join(process.cwd(), directory);

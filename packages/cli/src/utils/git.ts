@@ -5,8 +5,8 @@ import { exec } from "child_process";
 
 import { promisify } from "util";
 import { _spinner } from "./spinners.js";
+import { OWNER, REPO_CORE } from "./constants.js";
 import { ensureString, processDirectory } from "./index.js";
-import { OWNER, REPO, REPO_CORE } from "./constants.js";
 
 const spinner = _spinner();
 const execAsync = promisify(exec);
@@ -29,6 +29,7 @@ const CORE_COMPONENTS = [
   "packages/core/src/types.tsx",
   "packages/core/src/constants.tsx",
 ];
+
 const OTHER_SPARSES = CORE_COMPONENTS.slice(1).join(" ");
 
 export const initProject = async (outDir: string, spinner: ReturnType<typeof _spinner>) => {
@@ -114,10 +115,21 @@ const removeTestFiles = async (filePath: string) => {
 };
 
 export const cloneSpecificFolder = async (
-  outDir: string,
-  remoteComponentFolderPath: string,
-  otherSparses?: string,
-  msg?: string,
+  {
+    msg,
+    repo,
+    outDir,
+    otherSparses,
+    unwantedFolders,
+    remoteComponentFolderPath,
+  }: {
+    msg?: string;
+    repo: string;
+    outDir: string;
+    otherSparses?: string;
+    unwantedFolders?: string[];
+    remoteComponentFolderPath: string;
+  },
 ) => {
   let tempDir: string = "";
   try {
@@ -135,7 +147,7 @@ export const cloneSpecificFolder = async (
 
     // Get components
     spinner.fetch(msg || "Fetching components...");
-    await cloneRepo(REPO, tempDir, remoteComponentFolderPath, otherSparses);
+    await cloneRepo(repo, tempDir, remoteComponentFolderPath, otherSparses);
     spinner.succeed("Fetching: Done...");
 
     spinner.start("Setting up...");
@@ -144,8 +156,21 @@ export const cloneSpecificFolder = async (
 
     fs.mkdirSync(componentDir, { recursive: true });
 
+    // Remove unwanted folder e.g foo/bar/scripts
+    if (unwantedFolders?.length) {
+      for (const i of unwantedFolders) {
+        try {
+          await execAsync(
+            `rm -rf ${path.join(tempDir, i)}`,
+          );
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    }
+
     // Copy component files from temp folder to actual location
-    const sparses = otherSparses?.split(" ") || [];
+    const sparses = otherSparses ? otherSparses.split(" ") || [] : [];
     const coreComponentsPath: string[] = [];
     if (sparses.length) {
       for (const s of [...sparses, remoteComponentFolderPath]) {
