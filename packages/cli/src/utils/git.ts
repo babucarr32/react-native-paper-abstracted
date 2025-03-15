@@ -113,7 +113,12 @@ const removeTestFiles = async (filePath: string) => {
   }
 };
 
-export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderPath: string, otherSparses?: string) => {
+export const cloneSpecificFolder = async (
+  outDir: string,
+  remoteComponentFolderPath: string,
+  otherSparses?: string,
+  msg?: string,
+) => {
   let tempDir: string = "";
   try {
     spinner.initialize();
@@ -129,7 +134,7 @@ export const cloneSpecificFolder = async (outDir: string, remoteComponentFolderP
     spinner.succeed();
 
     // Get components
-    spinner.fetch("Fetching components...");
+    spinner.fetch(msg || "Fetching components...");
     await cloneRepo(REPO, tempDir, remoteComponentFolderPath, otherSparses);
     spinner.succeed("Fetching: Done...");
 
