@@ -4,14 +4,34 @@ import fileSystem from "fs";
 import { Project, SourceFile, StringLiteral } from "ts-morph";
 import { cloneSpecificFolder } from "@react-native-paper-abstracted/cli/src/utils";
 
+type FetchComponentsType = {
+  msg?: string;
+  repo: string;
+  outputDir: string;
+  sparseDirs?: string;
+  unwantedFolders?: string[];
+  remoteComponentFolderPath: string;
+};
+
 export const fetchComponents = async (
-  outputDir: string,
-  remoteComponentFolderPath: string,
-  sparseDirs?: string,
-  msg?: string,
+  {
+    msg,
+    repo,
+    outputDir,
+    sparseDirs,
+    unwantedFolders,
+    remoteComponentFolderPath,
+  }: FetchComponentsType,
 ) => {
   const outDir = path.join(outputDir);
-  await cloneSpecificFolder(outDir, remoteComponentFolderPath, sparseDirs, msg);
+  await cloneSpecificFolder({
+    msg,
+    repo,
+    outDir,
+    unwantedFolders,
+    otherSparses: sparseDirs,
+    remoteComponentFolderPath,
+  });
 };
 
 const project = new Project();
