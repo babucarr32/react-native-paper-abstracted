@@ -26,6 +26,7 @@
   ],
   "exclude": [
     "node_modules",
+    "__examples__",
     "__components__",
     "../../packages/core",
     "../../packages/example",
