@@ -6,12 +6,16 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
       ],
       "@/lib/*": [
         "./*"
+      ],
+      "contentlayer/generated": [
+        "./.contentlayer/generated"
       ]
     }
   },
@@ -22,6 +26,7 @@
     "next.config.js",
     ".next/types/**/*.ts",
     "mdx-components.tsx",
+    "./.contentlayer/generated",
     "../.."
   ],
   "exclude": [
@@ -29,6 +34,7 @@
     "__examples__",
     "__components__",
     "../../packages/core",
-    "../../packages/example",
+    "./.contentlayer/generated",
+    "../../packages/example"
   ]
 }

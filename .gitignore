@@ -46,3 +46,6 @@ apps/web/__components__
 apps/web/__examples__
 packages/cli/src/*.js
 packages/core/scripts/*.js
+
+# contentlayer
+.contentlayer
