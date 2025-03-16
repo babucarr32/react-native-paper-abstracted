@@ -557,6 +557,7 @@ function BlockViewer({
 }) {
   const posthog = usePostHog();
   const [current, setCurrent] = React.useState("docs");
+
   return (
     <BlockViewerProvider
       item={item}

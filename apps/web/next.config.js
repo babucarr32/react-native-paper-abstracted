@@ -5,6 +5,7 @@
 import nextMDX from "@next/mdx";
 import rehypeSlug from "rehype-slug";
 import rehypePrettyCode from "rehype-pretty-code";
+import { withContentlayer } from "next-contentlayer";
 
 /** @type {NextConfigPlugins} */
 const plugins = [];
@@ -41,4 +42,4 @@ plugins.push(
   }),
 );
 
-export default () => plugins.reduce((_, plugin) => plugin(_), nextConfig);
+export default () => plugins.reduce((_, plugin) => plugin(_), withContentlayer(nextConfig));

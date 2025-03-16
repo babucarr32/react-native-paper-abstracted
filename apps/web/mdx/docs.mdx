@@ -1,6 +1,6 @@
 export function Highlight ({text}) {
   return (
-    <span className="bg-zinc-700 text-sm p-[3px] rounded-xl px-3">{text}</span>
+    <span className="bg-zinc-100 dark:bg-zinc-700 text-sm p-[3px] rounded-xl px-3">{text}</span>
   )
 }
 
@@ -88,3 +88,49 @@ You can get the names and commands of the components from the explorer tab.
 
 ### Manual
 Visit the explorer tab, and copy your desired component.
+
+Wrap your root layout with the <Highlight text={"PaperProvider"} />
+
+```ts
+import { Stack } from 'expo-router';
+
+import PaperProvider from '@/components/core/PaperProvider';
+
+import { Colors } from '@/constants/Colors';
+import { MD3LightTheme } from '@/components/styles/themes';
+
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...Colors.colors
+  },
+};
+
+export default function RootLayout() {
+  return (
+    <PaperProvider theme={theme}>
+      <Stack>
+        <Stack.Screen name="index" options={{headerShown: false}}/>
+      </Stack>
+    </PaperProvider>
+  );
+}
+```
+
+Now you can import the component(s) like you normally do.
+
+```ts
+import * as React from 'react';
+import Button from '@/components/Button/Button';
+import { View } from 'react-native';
+
+const HomeScreen = () => (
+  <View style={{flexDirection: 'row', gap: 16, flexWrap: 'wrap'}}>
+    <Button style={{width: 'auto'}} mode="contained">
+      Press me
+    </Button>  
+  </View>
+);
+
+export default HomeScreen;
+```

@@ -3,6 +3,9 @@ import { BlockViewer } from "@/components/ui/block-viewer";
 import { OUT_DIR, generateTree } from "@/scripts/index";
 import { mdxToHTML } from "@/libs";
 import path from "path";
+// import { allDocs } from "@/.contentlayer/generated";
+// import { useMDXComponents } from "@/mdx-components";
+// import { useMDXComponent } from "next-contentlayer/hooks";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +28,12 @@ const getDocs = (): Promise<string> => {
 
 export default async function Page() {
   const docs = await getDocs();
+  // const MDXContent = useMDXComponent(allDocs[0]?.body.html || "");
+  // console.log(allDocs[0]?.body.html);
 
+  // return <MDXContent />;
   return (
-    <div className="p-4 md:px-8 py-4">
+    <div className="max-w-[1700px] mx-auto mx-4 py-4">
       <BlockViewer item={item} highlightedFiles={null} tree={null} code={""} treeData={treeData} docs={docs} />
     </div>
   );
