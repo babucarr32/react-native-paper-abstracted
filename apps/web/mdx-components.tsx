@@ -24,17 +24,18 @@ export const mdxComponents = {
     />
   ),
   pre: ({ children, __rawString__ }: PropType) => {
-    console.log(__rawString__);
     return (
-      <pre
-        style={{
-          fontFamily: "var(--font-geist-mono)",
-        }}
-        className="relative border dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 rounded-xl my-2 max-w-[700px] py-16"
-      >
+      <div className="relative my-2 max-w-[700px] ">
         <CopyButton text={__rawString__} />
+        <pre
+          style={{
+            fontFamily: "var(--font-geist-mono)",
+          }}
+          className="relative border dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 rounded-xl py-16"
+        >
         {children}
-      </pre>
+        </pre>
+      </div>
     );
   },
 };

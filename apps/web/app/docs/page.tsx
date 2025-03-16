@@ -33,7 +33,7 @@ export default async function Page() {
 
   // return <MDXContent />;
   return (
-    <div className="max-w-[1700px] mx-auto mx-4 py-4">
+    <div className="max-w-[1700px] mx-auto p-4 lg:px-10 2xl:px-0 mx-4 py-4">
       <BlockViewer item={item} highlightedFiles={null} tree={null} code={""} treeData={treeData} docs={docs} />
     </div>
   );
