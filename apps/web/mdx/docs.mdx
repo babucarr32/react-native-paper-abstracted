@@ -4,16 +4,17 @@ export function Highlight ({text}) {
   )
 }
 
-# React Native Paper Abstracted(RNPA) Installation Guide
+# React Native Paper Abstracted (RNPA) Installation Guide
 
 ## Introduction
-React Native Paper Abstracted is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com).
-Thus allowing users to keep their app size small, and provides endless customization.
+React Native Paper Abstracted (RNPA) is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com). This helps keep your app size small while providing endless customization options.
+
+---
 
 ## Installation
 
-### CLI
-The command-line interface tool is allows you to setup and install components effortlessly.
+### Using the CLI
+The command-line interface (CLI) tool lets you set up and install components effortlessly.
 
 ```bash
 npm install @react-native-paper-abstracted/cli
@@ -22,43 +23,43 @@ npm install @react-native-paper-abstracted/cli
 ```bash
 npx rnpa init
 ```
-<br />
 
-### Manual
-React Native Paper Abstracted can be used without installing any tools.
+---
+
+### Manual Installation
+RNPA can be used without installing the CLI tool.
 
 ```bash
-npm i @callstack/react-theme-provider
-npm i color
-npm install react-native-safe-area-context
+npm i @callstack/react-theme-provider color react-native-safe-area-context
 ```
-Navigate to the explorer tab, and add the components in the following folders/files to your project.
-Keep the file structures accordingly.
 
-1. <Highlight text={"/core"} />
-2. <Highlight text={"/styles"} />
-3. <Highlight text={"/utils"} />
-4. <Highlight text={"/types.tsx"} />
+Navigate to the **Explorer** tab and add the following folders/files to your project while maintaining the correct file structure:
 
-For non expo managed projects you need to install and link [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons)
-specifically MaterialCommunityIcons.
+1. <Highlight text="/core" />
+2. <Highlight text="/styles" />
+3. <Highlight text="/utils" />
+4. <Highlight text="/types.tsx" />
+5. <Highlight text="/constants.tsx" />
+
+#### Non-Expo Projects
+For non-Expo projects, install and link [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) (specifically, **MaterialCommunityIcons**):
 
 ```bash
 npm install @react-native-vector-icons/material-icons
 npm i @types/react-native-vector-icons
 ```
 
-If you use Expo, you don't need to install vector icons. But if you have a babel.config.js or .babelrc file, make sure that it includes
-babel-preset-expo.
+#### Expo Projects
+If you use **Expo**, vector icons are already included. However, ensure your `babel.config.js` or `.babelrc` file (if they exist) includes `babel-preset-expo`:
 
-.babelrc
+**.babelrc**
 ```ts
 module.exports = {
   presets: ['module:metro-react-native-babel-preset'],
 };
 ```
 
-babel.config.js
+**babel.config.js**
 ```ts
 module.exports = function(api) {
   api.cache(true);
@@ -67,35 +68,36 @@ module.exports = function(api) {
   };
 };
 ```
-<br />
-## Usage
+
 ---
 
-### CLI
+## How to Use
 
-To inititalize the project run the following.
+### Using the CLI
+
+To initialize the project, run:
 ```bash
 npx rnpa init
 ```
 
-To add components use the *add* option followed by the component name.
+To add components, use the **add** command followed by the component name:
 ```bash
-npx rnpa add <coponent-name>
+npx rnpa add <component-name>
 ```
-You can get the names and commands of the components from the explorer tab.
 
-<br />
+You can find available components and their commands in the **Explorer** tab.
 
-### Manual
-Visit the explorer tab, and copy your desired component.
+---
 
-Wrap your root layout with the <Highlight text={"PaperProvider"} />
+### Manual Usage
+
+Visit the **Explorer** tab and copy the desired component.
+
+Wrap your root layout with the <Highlight text="PaperProvider" /> component:
 
 ```ts
 import { Stack } from 'expo-router';
-
 import PaperProvider from '@/components/core/PaperProvider';
-
 import { Colors } from '@/constants/Colors';
 import { MD3LightTheme } from '@/components/styles/themes';
 
@@ -117,7 +119,9 @@ export default function RootLayout() {
 }
 ```
 
-Now you can import the component(s) like you normally do.
+---
+
+Now, you can import and use components as usual:
 
 ```ts
 import * as React from 'react';
@@ -125,8 +129,8 @@ import Button from '@/components/Button/Button';
 import { View } from 'react-native';
 
 const HomeScreen = () => (
-  <View style={{flexDirection: 'row', gap: 16, flexWrap: 'wrap'}}>
-    <Button style={{width: 'auto'}} mode="contained">
+  <View style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
+    <Button style={{ width: 'auto' }} mode="contained">
       Press me
     </Button>  
   </View>
@@ -134,3 +138,4 @@ const HomeScreen = () => (
 
 export default HomeScreen;
 ```
+

@@ -148,15 +148,7 @@ function BlockViewerToolbar() {
   const { togglePreview, item, activeFolder } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
-  const componentName = activeFolder?.split("/").pop() || "";
-  let activeComponentName = "";
-
-  const NONE_COMPONENTS = ["core", "styles", "utils"];
-  const CORE_COMPONENT = ["components", ...NONE_COMPONENTS];
-
-  if (!CORE_COMPONENT.includes(componentName) && !NONE_COMPONENTS.some((i) => activeFolder.includes(i))) {
-    activeComponentName = componentName;
-  }
+  const activeComponentName = activeFolder.split("components/")[1]?.split("/")[0] || "";
 
   return (
     <div className="flex w-full items-center gap-2 md:pr-[14px]">
@@ -175,7 +167,7 @@ function BlockViewerToolbar() {
             className="hidden !h-9 w-auto gap-1 !rounded-xl px-2 md:flex lg:w-auto"
             onClick={() => {
               copyToClipboard(`npx rnpa add ${activeComponentName}`);
-              posthog.capture("copy_code");
+              posthog.capture("install_component_with_cli");
             }}
           >
             {isCopied ? <Check /> : <Terminal />}
@@ -186,7 +178,7 @@ function BlockViewerToolbar() {
           <Button
             variant={"outline"}
             onClick={() => {
-              posthog.capture("visit_repo");
+              posthog.capture("toggle_preview");
               togglePreview && togglePreview();
             }}
             className="h-10 rounded-xl"
@@ -252,15 +244,7 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
 
   const currentFilePath = activeFile?.split("__/").pop();
 
-  const componentName = activeFolder?.split("/").pop() || "";
-  let activeComponentName = "";
-
-  const NONE_COMPONENTS = ["core", "styles", "utils"];
-  const CORE_COMPONENT = ["components", ...NONE_COMPONENTS];
-
-  if (!CORE_COMPONENT.includes(componentName) && !NONE_COMPONENTS.some((i) => activeFolder.includes(i))) {
-    activeComponentName = componentName;
-  }
+  const activeComponentName = activeFolder.split("components/")[1]?.split("/")[0] || "";
   const compName = activeComponentName.charAt(0).toLocaleLowerCase() + activeComponentName.slice(1);
 
   React.useEffect(() => {
@@ -330,14 +314,16 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
   }, [activeFile, viewExample, activeFolder, compName, hasClickedOnFolder]);
 
   return (
-    <div className="mr-[14px] border-r border-b flex overflow-hidden rounded-xl bg-zinc-950 text-white group-data-[view=preview]/block-view-wrapper:hidden md:h-screen">
+    <div className="mr-[14px] border-r border-b flex overflow-scroll md:overflow-hidden rounded-xl bg-zinc-950 text-white group-data-[view=preview]/block-view-wrapper:hidden md:h-screen">
       <div className="w-[280px]">
         <BlockViewerFileTree treeData={treeData} />
       </div>
-      <div className="relative flex min-w-0 flex-1 flex-col">
+      <div className="relative flex md:min-w-0 flex-1 flex-col">
         <div className="flex h-12 items-center gap-2 border-b border-zinc-700 bg-zinc-900 px-4 text-sm font-medium">
-          <File className="size-4" />
-          {currentFilePath}
+          <div className="hidden lg:flex items-center gap-2">
+            <File className="size-4" />
+            {currentFilePath}
+          </div>
 
           <RenderIfTruthy isTrue={Boolean(activeComponentName)}>
             <Link
