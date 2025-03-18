@@ -42,5 +42,26 @@
     "prompts": "^2.4.2",
     "simple-git": "^3.27.0",
     "ts-node": "^10.9.2"
-  }
+  },
+  "keywords": [
+    "UI",
+    "IOS",
+    "CLI",
+    "Free",
+    "Expo",
+    "Paper",
+    "React",
+    "Native",
+    "Android",
+    "Designed",
+    "Components",
+    "Abstracted",
+    "Open Source",
+    "Material UI",
+    "React Native",
+    "Material Design",
+    "React Native Paper",
+    "React Native Paper Abstracted",
+    "React Native Paper Abstracted CLI"
+  ]
 }

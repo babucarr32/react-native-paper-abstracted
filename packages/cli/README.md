@@ -1,4 +1,4 @@
-# React Native Paper Abstracted (RNPA) Installation Guide
+# React Native Paper Abstracted (RNPA)
 
 ## Introduction
 React Native Paper Abstracted (RNPA) is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com). This helps keep your app size small while providing endless customization options.
@@ -29,11 +29,11 @@ npm i @callstack/react-theme-provider color react-native-safe-area-context
 
 Navigate to the **Explorer** tab and add the following folders/files to your project while maintaining the correct file structure:
 
-*/core*
-*/styles*
-*/utils*
-*/types.tsx*
-*/constants.tsx*
+- **/core**
+- **/styles**
+- **/utils**
+- **/types.tsx**
+- **/constants.tsx**
 
 #### Non-Expo Projects
 For non-Expo projects, install and link [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) (specifically, **MaterialCommunityIcons**):
@@ -89,7 +89,7 @@ Visit the **Explorer** tab and copy the desired component.
 
 ---
 
-Wrap your root layout with the *PaperProvider* component:
+Wrap your root layout with the **PaperProvider** component:
 
 ```ts
 import { Stack } from 'expo-router';
