@@ -1,4 +1,5 @@
 import path from "path";
+import "dotenv/config";
 import pc from "picocolors";
 import { Octokit } from "octokit";
 import { _spinner } from "./spinners.js";
@@ -69,12 +70,38 @@ const updateImport = (
     // Access the components folder correctly
     // Specifically used for the core folder
     const literal = s.getLiteralValue();
+
     if (alias) {
       // This is used for other components
       // if path is ../../foo/bar change it to @/alias/foo/bar
       if (literal.includes("..")) {
         const newImport = alias + literal.split("..").pop();
         s.setLiteralValue(newImport);
+      }
+
+      if (relativeOutDir && literal.startsWith("../")) {
+        // Check if the current import is declaration has over traversed
+        // beyond outside the specified outdir
+        // if relative outdir is foo/bar/baz and the current import
+        // from file foo/bar/baz/comp/index.tsx is ../../foobar
+        // Resolving the dir produces foo/foobar
+        // This is considered to be outside.
+        // The import should be ../foobar and resolve to
+        // foo/bar/baz/foobar
+        const handleTraversePath = (currentImport: string) => {
+          const folderPath = ensureString(filePath?.split("/").slice(0, -1).join("/"));
+          const fullPath = path.resolve(folderPath, currentImport);
+          if (!fullPath.includes(relativeOutDir) && currentImport.includes("../")) {
+            const traversedPath = currentImport.split(/^..\//).join("");
+            // Recusrsively traverse back
+            handleTraversePath(traversedPath);
+          } else {
+            const resolvedPath = path.resolve(folderPath, currentImport);
+            const newImport = alias + resolvedPath.split(relativeOutDir).slice(1).join("");
+            s.setLiteralValue(newImport);
+          }
+        };
+        handleTraversePath(literal);
       }
 
       // If component in Foo/index.tsx prepend imports with alias to
@@ -248,7 +275,7 @@ export const handleSaveToFolder = async (
         const sourceFile = project.getSourceFile(filePath);
         const moduleSpecifiers = getModuleSpecifier(sourceFile);
         // Set import alias
-        updateImport({ moduleSpecifiers, alias: importAlias, filePath });
+        updateImport({ moduleSpecifiers, alias: importAlias, filePath, relativeOutDir: outDir });
         await sourceFile?.save();
 
         spinner.stop();

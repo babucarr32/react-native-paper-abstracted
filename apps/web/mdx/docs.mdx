@@ -93,24 +93,17 @@ You can find available components and their commands in the **Explorer** tab.
 
 Visit the **Explorer** tab and copy the desired component.
 
+---
+
 Wrap your root layout with the <Highlight text="PaperProvider" /> component:
 
 ```ts
 import { Stack } from 'expo-router';
 import PaperProvider from '@/components/core/PaperProvider';
-import { Colors } from '@/constants/Colors';
-import { MD3LightTheme } from '@/components/styles/themes';
-
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...Colors.colors
-  },
-};
 
 export default function RootLayout() {
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider>
       <Stack>
         <Stack.Screen name="index" options={{headerShown: false}}/>
       </Stack>
@@ -118,8 +111,6 @@ export default function RootLayout() {
   );
 }
 ```
-
----
 
 Now, you can import and use components as usual:
 

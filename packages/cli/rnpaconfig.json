@@ -1,3 +1,4 @@
 {
-  "outDir": "components"
+  "outDir": "components",
+  "alias": "@/components"
 }
