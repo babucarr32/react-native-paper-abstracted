@@ -46,6 +46,8 @@ apps/web/__components__
 apps/web/__examples__
 packages/cli/src/*.js
 packages/cli/components
+packages/cli/rnpaconfig.json
+packages/cli/rnpa.config.d.ts
 packages/core/scripts/*.js
 
 # contentlayer
