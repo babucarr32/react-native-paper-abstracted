@@ -1,84 +1,126 @@
-# Turborepo starter
+# React Native Paper Abstracted (RNPA) Installation Guide
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Introduction
+React Native Paper Abstracted (RNPA) is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com). This helps keep your app size small while providing endless customization options.
 
-## Using this example
+---
 
-Run the following command:
+## Installation
 
-```sh
-npx create-turbo@latest
+### Using the CLI
+The command-line interface (CLI) tool lets you set up and install components effortlessly.
+
+```bash
+npm install @react-native-paper-abstracted/cli
 ```
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@react-native-paper-abstracted/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@react-native-paper-abstracted/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@react-native-paper-abstracted/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+```bash
+npx rnpa init
 ```
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+### Manual Installation
+RNPA can be used without installing the CLI tool.
 
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
+```bash
+npm i @callstack/react-theme-provider color react-native-safe-area-context
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Navigate to the **Explorer** tab and add the following folders/files to your project while maintaining the correct file structure:
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+*/core*
+*/styles*
+*/utils*
+*/types.tsx*
+*/constants.tsx*
 
+#### Non-Expo Projects
+For non-Expo projects, install and link [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) (specifically, **MaterialCommunityIcons**):
+
+```bash
+npm install @react-native-vector-icons/material-icons
+npm i @types/react-native-vector-icons
 ```
-npx turbo link
+
+#### Expo Projects
+If you use **Expo**, vector icons are already included. However, ensure your `babel.config.js` or `.babelrc` file (if they exist) includes `babel-preset-expo`:
+
+**.babelrc**
+```ts
+module.exports = {
+  presets: ['module:metro-react-native-babel-preset'],
+};
 ```
 
-## Useful Links
+**babel.config.js**
+```ts
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+```
 
-Learn more about the power of Turborepo:
+---
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+## How to Use
+
+### Using the CLI
+
+To initialize the project, run:
+```bash
+npx rnpa init
+```
+
+To add components, use the **add** command followed by the component name:
+```bash
+npx rnpa add <component-name>
+```
+
+You can find available components and their commands in the **Explorer** tab.
+
+---
+
+### Manual Usage
+
+Visit the **Explorer** tab and copy the desired component.
+
+---
+
+Wrap your root layout with the *PaperProvider* component:
+
+```ts
+import { Stack } from 'expo-router';
+import PaperProvider from '@/components/core/PaperProvider';
+
+export default function RootLayout() {
+  return (
+    <PaperProvider>
+      <Stack>
+        <Stack.Screen name="index" options={{headerShown: false}}/>
+      </Stack>
+    </PaperProvider>
+  );
+}
+```
+
+Now, you can import and use components as usual:
+
+```ts
+import * as React from 'react';
+import Button from '@/components/Button/Button';
+import { View } from 'react-native';
+
+const HomeScreen = () => (
+  <View style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
+    <Button style={{ width: 'auto' }} mode="contained">
+      Press me
+    </Button>  
+  </View>
+);
+
+export default HomeScreen;
+```
+
