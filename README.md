@@ -23,7 +23,7 @@ This Turborepo has some additional tools already setup for you:
 
 To build all apps and packages, run the following command:
 
-```
+```bash
 cd react-native-paper-abstracted
 npm run build
 ```
@@ -32,16 +32,22 @@ npm run build
 
 To develop the web, run the following command:
 
-```
+```bash
 cd react-native-paper-abstracted
 npm run dev --workspace=web
 ```
 
 To develop the CLI, run the following command:
 
-```
+```bash
 cd react-native-paper-abstracted
 npm run dev:watch --workspace=react-native-paper-abstracted/cli
+```
+
+Run the following command from a different tab:
+
+```bash
+npm run dev --workspace=@react-native-paper-abstracted/cli
 ```
 
 ## Contributions are highly welcomed 😉
