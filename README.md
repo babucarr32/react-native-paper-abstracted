@@ -1,4 +1,4 @@
-[React Native Paper Logo](/assets/images/rnpa-large.png)
+![React Native Paper Logo](/assets/images/rnpa-large.png)
 # React Native Paper Abstracted (RNPA)
 
 ## Introduction
