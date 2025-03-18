@@ -45,6 +45,7 @@ packages/core/src/__remote_components__
 apps/web/__components__
 apps/web/__examples__
 packages/cli/src/*.js
+packages/cli/components
 packages/core/scripts/*.js
 
 # contentlayer
