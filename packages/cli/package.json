@@ -16,7 +16,7 @@
     "check-types": "tsc --noEmit",
     "dev:watch": "tsc --watch",
     "build": "tsc",
-    "dev": "node --watch src/index.ts"
+    "dev": "node dist/index.js"
   },
   "devDependencies": {
     "@react-native-paper-abstracted/eslint-config": "*",
