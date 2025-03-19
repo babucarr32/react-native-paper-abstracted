@@ -34,6 +34,7 @@ import Docs from "../docs";
 import { cn } from "../lib/utils";
 import { usePostHog } from "posthog-js/react";
 import { isDragActive } from "motion/react";
+import ImageWithFallback from "./image-with-fallback";
 // import { Style } from "@/registry/registry-styles";
 
 const V0Button = () => <Button>V0Button</Button>;
@@ -194,10 +195,10 @@ function BlockViewerToolbar() {
 
 const Preview = ({ src }: { src: string }) => {
   return (
-    <div className="w-[350px] 2xl:w-[400px]  border-l border-zinc-700 h-full">
+    <div className="hidden md:block w-[350px] 2xl:w-[400px]  border-l border-zinc-700 h-full">
       <div className="flex h-12 items-center border-b border-zinc-700 bg-zinc-900" />
       <div className="p-2 ">
-        <Image src={src} alt="Component image" height={900} width={400} // https://www.vecteezy.com/members/phanithi
+        <ImageWithFallback fallback="images/not-found.png" src={src} alt="Component image" height={900} width={400} // https://www.vecteezy.com/members/phanithi
         />
       </div>
     </div>
@@ -362,13 +363,11 @@ function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
           />
         </ConditionalLoadingRenderer>
       </div>
-      {preview
-        ? (
-          <Preview
-            src={`images/${compName}.png`}
-          />
-        )
-        : ""}
+      <RenderIfTruthy isTrue={Boolean(preview)}>
+        <Preview
+          src={`images/${compName}.png`}
+        />
+      </RenderIfTruthy>
     </div>
   );
 }
