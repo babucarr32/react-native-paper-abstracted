@@ -73,6 +73,17 @@ const promptOutDir: PromptObject<string>[] = [
   // },
 ];
 
+const promptUseImportAlias: PromptObject<string>[] = [
+  {
+    type: "toggle",
+    name: "useImportAlias",
+    message: "Will you like to use an import alias?",
+    initial: true,
+    active: "yes",
+    inactive: "no",
+  },
+];
+
 const questions: PromptObject<string>[] = [
   {
     type: "number",
@@ -97,18 +108,21 @@ type PromptReturnType = {
 export const prompter = async (): Promise<PromptReturnType> => {
   let alias;
 
-  const { configOutDir, useImportAlias } = await prompts(promptOutDir);
+  const { configOutDir } = await prompts(promptOutDir);
 
   if (fs.existsSync("tsconfig.json")) {
-    const { importAlias } = await prompts([
-      {
-        type: "text",
-        name: "importAlias",
-        message: "What is your import alias",
-        initial: `@/${configOutDir}`,
-      },
-    ]);
-    alias = importAlias;
+    const { useImportAlias } = await prompts(promptUseImportAlias);
+    if (useImportAlias) {
+      const { importAlias } = await prompts([
+        {
+          type: "text",
+          name: "importAlias",
+          message: "What is your import alias",
+          initial: `@/${configOutDir}`,
+        },
+      ]);
+      alias = importAlias;
+    }
   }
 
   return ({ importAlias: alias, configOutDir });

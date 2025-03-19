@@ -22,7 +22,6 @@ export default makeSource({
   mdx: {
     rehypePlugins: [
       () => (tree) => {
-        console.log("VISITING... 5");
         visit(tree, (node) => {
           if (node?.type === "element" && node?.tagName === "pre") {
             const [codeEl] = node.children;
