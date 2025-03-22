@@ -4,6 +4,29 @@ export function Highlight ({text}) {
   )
 }
 
+export function Hint({text}) {
+  return (
+    <div className="my-6 border border-yellow-500 text-yellow-500 p-4 rounded-xl bg-yellow-100 dark:bg-yellow-950/40">
+      <p>
+        <span className="text-primary italic text-yellow-500 p-[3px] text-[16px] font-bold rounded-xl">
+          Warning: Request quota exhausted for request GET /repos/&#123;owner&#125;/&#123;repo&#125;/contents/&#123;path&#125;
+        </span>
+        <br />
+        <br />
+        Note: RNPA uses <a href="#" className="underline">Octokit</a> to fetch components behind the scene.
+        By default, all request are unauthenticated, therefore "The primary rate limit for unauthenticated requests is 60 requests per hour."
+        To fix this you need to <a href="https://github.com/settings/tokens/new" className="underline">create</a> and
+        add a personal access token to your .env file
+        <span className="text-primary italic bg-yellow-500/20 text-yellow-500 p-[3px] text-[14px] rounded-xl px-[8px] ml-2">
+          AUTH_TOKEN="YOUR-TOKEN"
+        </span> Or manually install components.
+        <br />
+        For more info see: <a href="https://octokit.github.io/rest.js/v21/#authentication" className="underline">See here</a>
+      </p>
+    </div>
+  )
+}
+
 # React Native Paper Abstracted (RNPA) Installation Guide
 
 ## Introduction
@@ -87,6 +110,7 @@ npx rnpa add <component-name>
 
 You can find available components and their commands in the **Explorer** tab.
 
+<Hint />
 ---
 
 ### Manual Usage

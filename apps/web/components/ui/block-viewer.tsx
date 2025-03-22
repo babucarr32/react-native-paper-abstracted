@@ -25,7 +25,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { cn } from "../lib/utils";
-import { camelToKebab } from "@/libs";
 import { usePostHog } from "posthog-js/react";
 import { ContentType, getContent } from "@/actions";
 import { useCopyToClipboard } from "@/hooks/copy-to-clipboard";
@@ -59,6 +58,10 @@ type BlockViewerContext = {
     })[]
     | null;
 };
+
+function camelToKebab(str: string): string {
+  return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+}
 
 const BlockViewerContext = React.createContext<BlockViewerContext | null>(null);
 

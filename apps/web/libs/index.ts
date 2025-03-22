@@ -42,7 +42,3 @@ export const isDir = (dir: string | Buffer<ArrayBufferLike>) => {
 export const isFile = (dir: string) => {
   return fs.lstatSync(dir).isFile();
 };
-
-export function camelToKebab(str: string): string {
-  return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-}
