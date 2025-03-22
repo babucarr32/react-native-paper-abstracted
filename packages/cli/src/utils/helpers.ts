@@ -1,9 +1,9 @@
-import path from "path";
+import path, { relative } from "path";
 import "dotenv/config";
 import pc from "picocolors";
 import { Octokit } from "octokit";
 import { _spinner } from "./spinners.js";
-import { OWNER, REPO } from "./constants.js";
+import { OWNER, REPO, REPO_CORE } from "./constants.js";
 import fileSystem, { promises as fs } from "fs";
 import { BLUE, RED, YELLOW } from "./constants.js";
 import { overrideComponentPrompter } from "./index.js";
@@ -194,8 +194,18 @@ const handleCreateFile = async (
   await fs.writeFile(filePath, uint8ArrayContent);
 };
 
-const handleCreateFilePath = (basePath: string, relativePath: string) => {
-  const contentPath = relativePath.split(COMPONENTS_PATH).pop() || "";
+const handleCreateFilePath = (
+  {
+    basePath,
+    relativePath,
+    relativeParentFolderPath = COMPONENTS_PATH,
+  }: {
+    basePath: string;
+    relativePath: string;
+    relativeParentFolderPath: string | undefined;
+  },
+) => {
+  const contentPath = relativePath.split(relativeParentFolderPath).pop() || "";
   return path.join(basePath, contentPath);
 };
 
@@ -212,7 +222,7 @@ const handleGetContent = async (componentName: string) => {
   try {
     const result = await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
       owner: OWNER,
-      repo: REPO,
+      repo: REPO_CORE,
       path: componentName,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
@@ -229,12 +239,41 @@ const handleGetContent = async (componentName: string) => {
   }
 };
 
+type SaveToFolderBase = {
+  log?: boolean;
+  outDir: string;
+  importAlias?: string;
+  relativeParentFolderPath?: string;
+  progressCallback: (progress: number, currentFileOrFolderName?: string) => void;
+};
+
+type SaveToFolderWithComponentName = SaveToFolderBase & {
+  componentName: string;
+  absoluteComponentPath?: never;
+};
+
+type SaveToFolderWithAbsolutePath = SaveToFolderBase & {
+  componentName?: never;
+  absoluteComponentPath: string;
+};
+
+type SaveToFolderType = SaveToFolderWithComponentName | SaveToFolderWithAbsolutePath;
+
 export const handleSaveToFolder = async (
-  outDir: string,
-  componentName: string,
-  importAlias: string,
-  progressCallback: (progress: number) => void,
+  {
+    outDir,
+    log = true,
+    importAlias,
+    componentName,
+    progressCallback,
+    absoluteComponentPath,
+    relativeParentFolderPath,
+  }: SaveToFolderType,
 ) => {
+  if (componentName && absoluteComponentPath) {
+    throw ("You canno specify componentName and absoluteComponentPath simultaneously");
+  }
+
   let processedCount = 0;
   let totalCount = 0;
 
@@ -251,7 +290,14 @@ export const handleSaveToFolder = async (
         await Promise.all(
           fileContent.map(async (data: any) => {
             if (data.type === "dir") {
-              const dirPath = path.join(process.cwd(), handleCreateFilePath(outDir, data.path));
+              const dirPath = path.join(
+                process.cwd(),
+                handleCreateFilePath({
+                  basePath: outDir,
+                  relativePath: data.path,
+                  relativeParentFolderPath,
+                }),
+              );
               await fs.mkdir(dirPath, { recursive: true });
               await recurse(data.path);
             } else {
@@ -261,10 +307,24 @@ export const handleSaveToFolder = async (
         );
       } else {
         processedCount++;
-        const filePath = path.join(process.cwd(), handleCreateFilePath(outDir, fileContent?.path));
+        const filePath = path.join(
+          process.cwd(),
+          handleCreateFilePath({
+            basePath: outDir,
+            relativeParentFolderPath,
+            relativePath: fileContent?.path,
+          }),
+        );
         const pathSplit = fileContent.path.split("/");
         const folderPath = pathSplit.slice(0, pathSplit.length - 1).join("/");
-        const compOutDir = path.join(process.cwd(), handleCreateFilePath(outDir, folderPath));
+        const compOutDir = path.join(
+          process.cwd(),
+          handleCreateFilePath({
+            basePath: outDir,
+            relativePath: folderPath,
+            relativeParentFolderPath,
+          }),
+        );
 
         await fs.mkdir(compOutDir, { recursive: true });
         const decodedContent = atob((fileContent as any).content);
@@ -279,26 +339,37 @@ export const handleSaveToFolder = async (
         await sourceFile?.save();
 
         spinner.stop();
-        console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
+
+        if (log) {
+          console.log(`${pc.bold("Fetched:")} ${pc.cyan(filePath)}`);
+        }
+
         const progress = (processedCount / totalCount) * 100;
         if (progress !== 100) {
-          progressCallback(progress);
+          progressCallback(progress, path.basename(componentName! || absoluteComponentPath!));
         }
       }
     }
   };
 
-  const remoteComponentPath = `src/components/${componentName}`;
+  const remoteComponentPath = absoluteComponentPath || `packages/core/src/components/${componentName}`;
+  let compName = componentName;
+
+  if (absoluteComponentPath) {
+    compName = path.basename(absoluteComponentPath);
+  }
 
   const basePath = path.join(process.cwd(), outDir);
-  const pathToSaveComponent = path.join(basePath, componentName);
+  const pathToSaveComponent = path.join(basePath, compName as string);
 
-  if (fileSystem.existsSync(pathToSaveComponent)) {
-    const override = await overrideComponentPrompter();
-    if (override) {
-      await fs.rm(pathToSaveComponent, { recursive: true, force: true });
-    } else {
-      process.exit();
+  if (!absoluteComponentPath && componentName) {
+    if (fileSystem.existsSync(pathToSaveComponent)) {
+      const override = await overrideComponentPrompter();
+      if (override) {
+        await fs.rm(pathToSaveComponent, { recursive: true, force: true });
+      } else {
+        process.exit();
+      }
     }
   }
 
@@ -308,6 +379,6 @@ export const handleSaveToFolder = async (
 
   spinner.start();
   await recurse(remoteComponentPath);
-  progressCallback(100);
+  progressCallback(100, path.basename(componentName! || absoluteComponentPath!));
   return pathToSaveComponent;
 };

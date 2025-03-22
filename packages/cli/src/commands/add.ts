@@ -24,9 +24,16 @@ export const add = async (str: string) => {
       return;
     }
 
-    const installedPath = await handleSaveToFolder(outDir, str, alias, (progress) => {
+    const progressCallback = (progress: number) => {
       spinner.fetch();
       if (progress === 100) spinner.succeed("Done");
+    };
+
+    const installedPath = await handleSaveToFolder({
+      outDir,
+      progressCallback,
+      componentName: str,
+      importAlias: alias,
     });
 
     if (installedPath) {

@@ -6,7 +6,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { _spinner } from "./spinners.js";
 import { OWNER, REPO_CORE } from "./constants.js";
-import { ensureString, processDirectory } from "./index.js";
+import { ensureString, handleSaveToFolder, processDirectory } from "./index.js";
 
 const spinner = _spinner();
 const execAsync = promisify(exec);
@@ -21,22 +21,22 @@ const cloneRepo = async (repoName: string, targetPath: string, sparsePath: strin
 };
 
 const CORE_COMPONENTS = [
-  "packages/core/src/core",
-  "packages/core/src/styles",
-  "packages/core/src/utils",
-  "packages/core/src/components/MaterialCommunityIcon",
-  "packages/core/src/components/Portal",
-  "packages/core/src/types.tsx",
-  "packages/core/src/constants.tsx",
+  { path: "packages/core/src/core", relativeParentPath: "src" },
+  { path: "packages/core/src/styles", relativeParentPath: "src" },
+  { path: "packages/core/src/utils", relativeParentPath: "src" },
+  { path: "packages/core/src/components/MaterialCommunityIcon", relativeParentPath: "src/components" },
+  { path: "packages/core/src/components/Portal", relativeParentPath: "src/components" },
+  { path: "packages/core/src/types.tsx", relativeParentPath: "src" },
+  { path: "packages/core/src/constants.tsx", relativeParentPath: "src" },
 ];
 
-const OTHER_SPARSES = CORE_COMPONENTS.slice(1).join(" ");
+// const OTHER_SPARSES = CORE_COMPONENTS.slice(1).join(" ");
 
 export const initProject = async (outDir: string, spinner: ReturnType<typeof _spinner>) => {
   let tempCoreDir: string = "";
 
   try {
-    spinner.start();
+    // spinner.start();
 
     // Create the base output directory
     fs.mkdirSync(outDir, { recursive: true });
@@ -53,40 +53,62 @@ export const initProject = async (outDir: string, spinner: ReturnType<typeof _sp
 
     fs.mkdirSync(tempCoreDir);
 
-    // Clone and process core
-    await cloneRepo(
-      REPO_CORE,
-      tempCoreDir,
-      "packages/core/src/core",
-      OTHER_SPARSES,
-    );
-    // Move core files to final location
-    fs.mkdirSync(corePath, { recursive: true });
+    const progressCallback = (progress: number, currentFileOrFolderName?: string) => {
+      spinner.fetch(`Fetching ${currentFileOrFolderName}...`);
+      if (progress === 100) spinner.succeed("Done");
+    };
 
     const coreComponentsPath: string[] = [];
 
-    for (let i of CORE_COMPONENTS) {
-      // If sparse is a file omit -r flag
-      if (corePath.includes(".")) {
-        await execAsync(
-          `cp ${path.join(tempCoreDir, i)} ${corePath}`,
-        );
-      } else {
-        await execAsync(
-          `cp -r ${path.join(tempCoreDir, i)} ${corePath}`,
-        );
-      }
+    for (let { path: i, relativeParentPath } of CORE_COMPONENTS) {
+      const installedPath = await handleSaveToFolder({
+        outDir,
+        log: false,
+        progressCallback,
+        absoluteComponentPath: i,
+        relativeParentFolderPath: relativeParentPath,
+      });
+
       coreComponentsPath.push(path.join(corePath, path.basename(i)));
+      if (installedPath) {
+        console.log(`${pc.green("✔︎")} ${pc.bold("Output Dir")}: ${pc.cyan(installedPath)}`);
+      }
     }
 
+    // Clone and process core
+    // await cloneRepo(
+    //   REPO_CORE,
+    //   tempCoreDir,
+    //   "packages/core/src/core",
+    //   OTHER_SPARSES,
+    // );
+
+    // Move core files to final location
+    // fs.mkdirSync(corePath, { recursive: true });
+
+    // for (let i of CORE_COMPONENTS) {
+    //   // If sparse is a file omit -r flag
+    //   if (corePath.includes(".")) {
+    //     await execAsync(
+    //       `cp ${path.join(tempCoreDir, i)} ${corePath}`,
+    //     );
+    //   } else {
+    //     await execAsync(
+    //       `cp -r ${path.join(tempCoreDir, i)} ${corePath}`,
+    //     );
+    //   }
+    //   coreComponentsPath.push(path.join(corePath, path.basename(i)));
+    // }
+
     // Process the core components, and update imports
+
     const relativeOutDir = path.join(process.cwd(), outDir);
     await processDirectory(coreComponentsPath, relativeOutDir);
 
     // Clean up core temp directory
     fs.rmSync(tempCoreDir, { recursive: true, force: true });
 
-    spinner.succeed("Done");
+    // spinner.succeed("Done");
   } catch (error: any) {
     if (tempCoreDir) {
       fs.rmSync(tempCoreDir, { recursive: true, force: true });
