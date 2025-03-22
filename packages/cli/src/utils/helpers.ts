@@ -335,7 +335,7 @@ export const handleSaveToFolder = async (
         const sourceFile = project.getSourceFile(filePath);
         const moduleSpecifiers = getModuleSpecifier(sourceFile);
         // Set import alias
-        updateImport({ moduleSpecifiers, alias: importAlias, filePath, relativeOutDir: outDir });
+        updateImport({ moduleSpecifiers, alias: "", filePath, relativeOutDir: outDir });
         await sourceFile?.save();
 
         spinner.stop();
