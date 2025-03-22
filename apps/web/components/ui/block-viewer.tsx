@@ -1,43 +1,34 @@
 "use client";
 
-import * as React from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, Loader, FileCode2 } from "lucide-react";
-import { ImperativePanelHandle } from "react-resizable-panels";
-// import { registryItemFileSchema, registryItemSchema } from "shadcn/registry";
 import { z } from "zod";
-import { ContentType, getContent } from "@/actions";
+import Link from "next/link";
+import * as React from "react";
+import { Eye, Book, Code, File, Send, Check, Terminal, Clipboard, ChevronRight, Loader, FileCode2 } from "lucide-react";
 
-import { trackEvent } from "@/components/lib/events";
-// import { FileTree, createFileTreeForRegistryItemFiles } from "@/lib/registry";
-import { useCopyToClipboard } from "@/hooks/copy-to-clipboard";
-// import { V0Button } from "@/components/v0-button";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Separator } from "@/components/ui/separator";
+import Docs from "../docs";
 import {
   Sidebar,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarGroup,
   SidebarMenuSub,
+  SidebarMenuItem,
   SidebarProvider,
+  SidebarGroupLabel,
+  SidebarMenuButton,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { highlightCode } from "@/libs";
 import { TreeType } from "@/scripts";
-import Docs from "../docs";
-import { cn } from "../lib/utils";
-import { usePostHog } from "posthog-js/react";
-import { isDragActive } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import ImageWithFallback from "./image-with-fallback";
-// import { Style } from "@/registry/registry-styles";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-const V0Button = () => <Button>V0Button</Button>;
+import { cn } from "../lib/utils";
+import { camelToKebab } from "@/libs";
+import { usePostHog } from "posthog-js/react";
+import { ContentType, getContent } from "@/actions";
+import { useCopyToClipboard } from "@/hooks/copy-to-clipboard";
 
 export type FileTree = {
   name: string;
@@ -46,25 +37,22 @@ export type FileTree = {
 };
 
 type BlockViewerContext = {
-  item: z.infer<any>;
-  view: "code" | "preview";
-  setView: (view: "code" | "preview") => void;
-  style?: any;
-  setStyle: (style: any) => void;
-  activeFile: string | null;
-  activeFolder: string;
   preview?: boolean;
-  viewExample?: boolean;
+  item: z.infer<any>;
+  activeFolder: string;
   fileContent?: string;
+  viewExample?: boolean;
+  view: "code" | "preview";
+  activeFile: string | null;
+  togglePreview?: () => void;
   hasClickedOnFolder: boolean;
+  tree: ReturnType<any> | null;
+  setActiveFile: (file: string) => void;
+  setView: (view: "code" | "preview") => void;
   setFileContent: React.Dispatch<React.SetStateAction<string>>;
   setActiveFolder: React.Dispatch<React.SetStateAction<string>>;
   setViewExample: React.Dispatch<React.SetStateAction<boolean>>;
   setHasClickedOnFolder: React.Dispatch<React.SetStateAction<boolean>>;
-  togglePreview?: () => void;
-  setActiveFile: (file: string) => void;
-  resizablePanelRef: React.RefObject<ImperativePanelHandle> | null;
-  tree: ReturnType<any> | null;
   highlightedFiles:
     | (z.infer<any> & {
       highlightedContent: string;
@@ -85,22 +73,20 @@ function useBlockViewer() {
 function BlockViewerProvider({
   item,
   tree,
-  highlightedFiles,
   children,
+  highlightedFiles,
 }: Pick<BlockViewerContext, "item" | "tree" | "highlightedFiles"> & {
   children: React.ReactNode;
 }) {
   const [preview, setPreview] = React.useState(false);
   const [fileContent, setFileContent] = React.useState("");
-  const [activeFolder, setActiveFolder] = React.useState("__components__/components/ActivityIndicator");
   const [viewExample, setViewExample] = React.useState(false);
   const [hasClickedOnFolder, setHasClickedOnFolder] = React.useState(false);
   const [view, setView] = React.useState<BlockViewerContext["view"]>("preview");
-  const [style, setStyle] = React.useState<BlockViewerContext["style"]>("");
+  const [activeFolder, setActiveFolder] = React.useState("__components__/components/ActivityIndicator");
   const [activeFile, setActiveFile] = React.useState<
     BlockViewerContext["activeFile"]
   >("__components__/components/ActivityIndicator/index.tsx");
-  const resizablePanelRef = React.useRef<ImperativePanelHandle>(null);
 
   const togglePreview = () => {
     setPreview(!preview);
@@ -112,10 +98,8 @@ function BlockViewerProvider({
         item,
         view,
         tree,
-        style,
         setView,
         preview,
-        setStyle,
         activeFile,
         fileContent,
         viewExample,
@@ -128,7 +112,6 @@ function BlockViewerProvider({
         highlightedFiles,
         hasClickedOnFolder,
         setHasClickedOnFolder,
-        resizablePanelRef: resizablePanelRef as any,
       }}
     >
       <div
@@ -146,8 +129,8 @@ function BlockViewerProvider({
 
 function BlockViewerToolbar() {
   const posthog = usePostHog();
-  const { togglePreview, item, activeFolder } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
+  const { togglePreview, item, activeFolder } = useBlockViewer();
 
   const activeComponentName = activeFolder.split("components/")[1]?.split("/")[0] || "";
 
@@ -178,11 +161,11 @@ function BlockViewerToolbar() {
         <div className="ml-4 flex gap-3">
           <Button
             variant={"outline"}
+            className="h-10 rounded-xl"
             onClick={() => {
               posthog.capture("toggle_preview");
               togglePreview && togglePreview();
             }}
-            className="h-10 rounded-xl"
           >
             <Eye />
             Preview
@@ -206,10 +189,14 @@ const Preview = ({ src }: { src: string }) => {
 };
 
 const ConditionalLoadingRenderer = (
-  { loading, Loader, children }: {
+  {
+    Loader,
+    loading,
+    children,
+  }: {
+    children: React.ReactNode;
     loading: boolean | undefined;
     Loader?: () => React.JSX.Element;
-    children: React.ReactNode;
   },
 ) => {
   if (loading) return Loader ? <Loader /> : "";
@@ -223,21 +210,16 @@ const LoadingSpinner = () => (
   </div>
 );
 
-function camelToKebab(str: string): string {
-  return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-}
-
 function BlockViewerCode({ treeData }: { code: string; treeData: TreeType[] }) {
   const posthog = usePostHog();
   const [code, setCode] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const {
+    preview,
     activeFile,
     viewExample,
-    setViewExample,
-    preview,
-    setActiveFile,
     activeFolder,
+    setViewExample,
     setFileContent,
     hasClickedOnFolder,
   } = useBlockViewer();
@@ -421,8 +403,8 @@ const TS = () => {
   return (
     <svg width="28" height="19" viewBox="0 0 28 19" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
-        d="M23.0608 1.01578C23.9919 1.23239 24.838 1.71992 25.4922 2.41687C25.8527 2.79407 26.1656 3.2139 26.4241 3.66703C26.4362 3.71625 24.7463 4.85156 23.7215 5.48484C23.6843 5.51 23.5366 5.34922 23.3693 5.10203C23.1821 4.78022 22.9163 4.51111 22.5969 4.31984C22.2775 4.12857 21.9148 4.02138 21.5427 4.00828C20.3647 3.92734 19.6057 4.54422 19.6112 5.57562C19.601 5.82902 19.6588 6.08052 19.7785 6.30406C20.0377 6.84 20.519 7.16156 22.0305 7.81672C24.813 9.01438 26.0074 9.80406 26.7446 10.9263C27.1613 11.6353 27.4179 12.4269 27.4965 13.2455C27.5751 14.0642 27.4738 14.8901 27.1996 15.6655C26.8228 16.5158 26.2252 17.2497 25.469 17.7912C24.7127 18.3326 23.8254 18.6617 22.899 18.7444C21.9142 18.8573 20.9193 18.847 19.9371 18.7137C18.4326 18.4665 17.0467 17.7445 15.9821 16.6531C15.5798 16.2001 15.2393 15.6959 14.9693 15.1536C15.0828 15.0691 15.2023 14.9931 15.3269 14.9261C15.4997 14.8277 16.1538 14.4514 16.7707 14.0938L17.8907 13.4375L18.1247 13.7788C18.519 14.3425 19.0208 14.8228 19.6013 15.1919C20.1876 15.5135 20.8517 15.6658 21.5195 15.632C22.1874 15.5982 22.8327 15.3796 23.3835 15.0005C23.6676 14.7235 23.8453 14.3554 23.8852 13.9607C23.9252 13.5659 23.8251 13.1697 23.6022 12.8414C23.3004 12.4094 22.6835 12.0462 20.9302 11.2861C19.5554 10.8225 18.3032 10.0542 17.2673 9.03844C16.7739 8.47621 16.4095 7.81283 16.1998 7.09484C16.0446 6.27692 16.0217 5.4394 16.1319 4.61422C16.3378 3.66467 16.8305 2.80135 17.5434 2.14124C18.2564 1.48114 19.155 1.05616 20.1176 0.923906C21.0977 0.806783 22.0899 0.837754 23.0608 1.01578ZM13.9357 2.63781L13.9477 4.22812H8.88366V18.6087H5.31256V4.23141H0.2485V2.66953C0.235031 2.13465 0.249635 1.59944 0.292249 1.06609C0.310843 1.04094 3.38975 1.02891 7.12272 1.03547L13.916 1.05406L13.9357 2.63781Z"
         fill="#007ACC"
+        d="M23.0608 1.01578C23.9919 1.23239 24.838 1.71992 25.4922 2.41687C25.8527 2.79407 26.1656 3.2139 26.4241 3.66703C26.4362 3.71625 24.7463 4.85156 23.7215 5.48484C23.6843 5.51 23.5366 5.34922 23.3693 5.10203C23.1821 4.78022 22.9163 4.51111 22.5969 4.31984C22.2775 4.12857 21.9148 4.02138 21.5427 4.00828C20.3647 3.92734 19.6057 4.54422 19.6112 5.57562C19.601 5.82902 19.6588 6.08052 19.7785 6.30406C20.0377 6.84 20.519 7.16156 22.0305 7.81672C24.813 9.01438 26.0074 9.80406 26.7446 10.9263C27.1613 11.6353 27.4179 12.4269 27.4965 13.2455C27.5751 14.0642 27.4738 14.8901 27.1996 15.6655C26.8228 16.5158 26.2252 17.2497 25.469 17.7912C24.7127 18.3326 23.8254 18.6617 22.899 18.7444C21.9142 18.8573 20.9193 18.847 19.9371 18.7137C18.4326 18.4665 17.0467 17.7445 15.9821 16.6531C15.5798 16.2001 15.2393 15.6959 14.9693 15.1536C15.0828 15.0691 15.2023 14.9931 15.3269 14.9261C15.4997 14.8277 16.1538 14.4514 16.7707 14.0938L17.8907 13.4375L18.1247 13.7788C18.519 14.3425 19.0208 14.8228 19.6013 15.1919C20.1876 15.5135 20.8517 15.6658 21.5195 15.632C22.1874 15.5982 22.8327 15.3796 23.3835 15.0005C23.6676 14.7235 23.8453 14.3554 23.8852 13.9607C23.9252 13.5659 23.8251 13.1697 23.6022 12.8414C23.3004 12.4094 22.6835 12.0462 20.9302 11.2861C19.5554 10.8225 18.3032 10.0542 17.2673 9.03844C16.7739 8.47621 16.4095 7.81283 16.1998 7.09484C16.0446 6.27692 16.0217 5.4394 16.1319 4.61422C16.3378 3.66467 16.8305 2.80135 17.5434 2.14124C18.2564 1.48114 19.155 1.05616 20.1176 0.923906C21.0977 0.806783 22.0899 0.837754 23.0608 1.01578ZM13.9357 2.63781L13.9477 4.22812H8.88366V18.6087H5.31256V4.23141H0.2485V2.66953C0.235031 2.13465 0.249635 1.59944 0.292249 1.06609C0.310843 1.04094 3.38975 1.02891 7.12272 1.03547L13.916 1.05406L13.9357 2.63781Z"
       />
     </svg>
   );
@@ -432,8 +414,8 @@ const FolderIcon = () => {
   return (
     <svg width="29" height="23" viewBox="0 0 29 23" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
-        d="M26.0781 0.015625H15.9063L13.6094 4.60937H0.8125V22.9844H28.375V0.015625H26.0781ZM26.0781 4.60937H17.1094L18.3125 2.3125H26.0781V4.60937Z"
         fill="#C09553"
+        d="M26.0781 0.015625H15.9063L13.6094 4.60937H0.8125V22.9844H28.375V0.015625H26.0781ZM26.0781 4.60937H17.1094L18.3125 2.3125H26.0781V4.60937Z"
       />
     </svg>
   );
@@ -478,9 +460,9 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
             onClick={() => {
-              setActiveFolder(item.path || "");
-              setHasClickedOnFolder(true);
               setViewExample(false);
+              setHasClickedOnFolder(true);
+              setActiveFolder(item.path || "");
             }}
             isActive={activeFile?.includes(item?.path || "")}
             className="whitespace-nowrap rounded-none hover:bg-zinc-700 hover:text-white focus-visible:bg-zinc-700 focus-visible:text-white active:bg-zinc-700 active:text-white data-[active=true]:bg-zinc-700 data-[active=true]:text-white data-[state=open]:hover:bg-zinc-700 data-[state=open]:hover:text-white"
@@ -505,7 +487,7 @@ function Tree({ item, index }: { item: FileTree; index: number }) {
 
 function BlockCopyCodeButton() {
   const posthog = usePostHog();
-  const { activeFile, fileContent, item } = useBlockViewer();
+  const { fileContent } = useBlockViewer();
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
   return (
@@ -554,8 +536,8 @@ function BlockViewer({
         <TabsList className="flex w-full  bg-transparent gap-3">
           <TabsTrigger value="docs" asChild>
             <Button
-              onClick={() => posthog.capture("docs_tab")}
               variant={"outline"}
+              onClick={() => posthog.capture("docs_tab")}
               className={cn("w-[100px] cursor-pointer h-10", current === "docs" && "!bg-accent")}
             >
               <Book />

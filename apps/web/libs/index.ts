@@ -2,10 +2,9 @@ import fs from "node:fs";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
+import rehypeSanitize from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
 import rehypePrettyCode from "rehype-pretty-code";
-import rehypeSanitize from "rehype-sanitize";
-import { transformerCopyButton } from "@rehype-pretty/transformers";
 
 export async function highlightCode(code: string) {
   const file = await unified()
@@ -43,3 +42,7 @@ export const isDir = (dir: string | Buffer<ArrayBufferLike>) => {
 export const isFile = (dir: string) => {
   return fs.lstatSync(dir).isFile();
 };
+
+export function camelToKebab(str: string): string {
+  return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+}
