@@ -1,6 +1,6 @@
 {
   "name": "@react-native-paper-abstracted/cli",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "type": "module",
   "description": "React Native Paper Abstracted is a package that allows you to use only the components you need from [React Native Paper](https://reactnativepaper.com). Thus allowing users to keep their app size small, and provides endless customization.",
   "homepage": "https://react-native-paper-abstracted.vercel.app/",

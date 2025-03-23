@@ -14,4 +14,4 @@ program.command("add")
   .argument("<string>", "Component name")
   .action(add);
 
-program.version("0.0.9");
+program.version("0.1.0");
