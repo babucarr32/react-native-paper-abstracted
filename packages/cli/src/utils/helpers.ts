@@ -1,3 +1,4 @@
+import  os from "node:os"
 import path, { relative } from "path";
 import "dotenv/config";
 import pc from "picocolors";
@@ -9,6 +10,7 @@ import { BLUE, RED, YELLOW } from "./constants.js";
 import { overrideComponentPrompter } from "./index.js";
 import { Project, SourceFile, StringLiteral } from "ts-morph";
 import { RNPAConfig } from "../../rnpa.config.js";
+import { normalize } from "node:path";
 
 const spinner = _spinner();
 
@@ -53,6 +55,22 @@ export const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
   return imports.map((i) => i.getModuleSpecifier());
 };
 
+const getFolderPath = (filePath:string | undefined) => {
+  let resolvedPath = ''
+  if(filePath) {
+    if(os.platform() === 'win32') {
+      resolvedPath = ensureString(filePath?.split("\\").slice(0, -1).join("/"));
+    } else {
+      resolvedPath = ensureString(filePath?.split("/").slice(0, -1).join("/")); 
+    }
+  }
+  return resolvedPath;
+};
+
+const normalizeImportPath = (componentFolderPath: string) => {
+  return componentFolderPath.replaceAll('\\', '/');
+};
+
 const updateImport = (
   {
     alias,
@@ -74,10 +92,13 @@ const updateImport = (
     if (alias) {
       // This is used for other components
       // if path is ../../foo/bar change it to @/alias/foo/bar
-      if (literal.includes("..")) {
-        const newImport = alias + literal.split("..").pop();
-        s.setLiteralValue(newImport);
-      }
+
+      // if (literal.includes("..")) {
+      //   const newImport = alias + literal.split("..").pop();
+      //   console.log({newImport})
+        
+      //   s.setLiteralValue(newImport);
+      // }
 
       if (relativeOutDir && literal.startsWith("../")) {
         // Check if the current import is declaration has over traversed
@@ -89,7 +110,7 @@ const updateImport = (
         // The import should be ../foobar and resolve to
         // foo/bar/baz/foobar
         const handleTraversePath = (currentImport: string) => {
-          const folderPath = ensureString(filePath?.split("/").slice(0, -1).join("/"));
+          const folderPath = getFolderPath(filePath);
           const fullPath = path.resolve(folderPath, currentImport);
           if (!fullPath.includes(relativeOutDir) && currentImport.includes("../")) {
             const traversedPath = currentImport.split(/^..\//).join("");
@@ -97,9 +118,10 @@ const updateImport = (
             handleTraversePath(traversedPath);
           } else {
             const resolvedPath = path.resolve(folderPath, currentImport);
-            const newImport = alias + resolvedPath.split(relativeOutDir).slice(1).join("");
+            const componentFolderPath = resolvedPath.split(relativeOutDir).slice(1).join("")
+            const newImport = alias + normalizeImportPath(componentFolderPath);
             s.setLiteralValue(newImport);
-          }
+          };          
         };
         handleTraversePath(literal);
       }
@@ -121,7 +143,7 @@ const updateImport = (
       // foo/bar/baz/foobar
       if (literal.includes("../..") && relativeOutDir) {
         const handleTraversePath = (currentImport: string) => {
-          const folderPath = ensureString(filePath?.split("/").slice(0, -1).join("/"));
+          const folderPath = getFolderPath(filePath);
           const fullPath = path.resolve(folderPath, currentImport);
           if (!fullPath.includes(relativeOutDir) && currentImport.includes("../")) {
             const traversedPath = currentImport.split(/^..\//).join("");
@@ -335,7 +357,7 @@ export const handleSaveToFolder = async (
         const sourceFile = project.getSourceFile(filePath);
         const moduleSpecifiers = getModuleSpecifier(sourceFile);
         // Set import alias
-        updateImport({ moduleSpecifiers, alias: "", filePath, relativeOutDir: outDir });
+        updateImport({ moduleSpecifiers, alias: importAlias, filePath, relativeOutDir: outDir });
         await sourceFile?.save();
 
         spinner.stop();
