@@ -1,5 +1,4 @@
 import type { MDXComponents } from "mdx/types";
-import { mdxCompileSync } from "next/dist/build/swc/generated-native";
 import Image, { ImageProps } from "next/image";
 import { CopyButton } from "./components/ui/copy-button";
 
