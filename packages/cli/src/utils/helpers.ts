@@ -1,4 +1,4 @@
-import  os from "node:os"
+import os from "node:os";
 import path, { relative } from "path";
 import "dotenv/config";
 import pc from "picocolors";
@@ -55,20 +55,20 @@ export const getModuleSpecifier = (sourceFile: SourceFile | undefined) => {
   return imports.map((i) => i.getModuleSpecifier());
 };
 
-const getFolderPath = (filePath:string | undefined) => {
-  let resolvedPath = ''
-  if(filePath) {
-    if(os.platform() === 'win32') {
+const getFolderPath = (filePath: string | undefined) => {
+  let resolvedPath = "";
+  if (filePath) {
+    if (os.platform() === "win32") {
       resolvedPath = ensureString(filePath?.split("\\").slice(0, -1).join("/"));
     } else {
-      resolvedPath = ensureString(filePath?.split("/").slice(0, -1).join("/")); 
+      resolvedPath = ensureString(filePath?.split("/").slice(0, -1).join("/"));
     }
   }
   return resolvedPath;
 };
 
 const normalizeImportPath = (componentFolderPath: string) => {
-  return componentFolderPath.replaceAll('\\', '/');
+  return componentFolderPath.replaceAll("\\", "/");
 };
 
 const updateImport = (
@@ -96,7 +96,7 @@ const updateImport = (
       // if (literal.includes("..")) {
       //   const newImport = alias + literal.split("..").pop();
       //   console.log({newImport})
-        
+
       //   s.setLiteralValue(newImport);
       // }
 
@@ -112,16 +112,16 @@ const updateImport = (
         const handleTraversePath = (currentImport: string) => {
           const folderPath = getFolderPath(filePath);
           const fullPath = path.resolve(folderPath, currentImport);
-          if (!fullPath.includes(relativeOutDir) && currentImport.includes("../")) {
+          if (!fullPath.includes(relativeOutDir) && currentImport.startsWith("../")) {
             const traversedPath = currentImport.split(/^..\//).join("");
             // Recusrsively traverse back
             handleTraversePath(traversedPath);
           } else {
             const resolvedPath = path.resolve(folderPath, currentImport);
-            const componentFolderPath = resolvedPath.split(relativeOutDir).slice(1).join("")
+            const componentFolderPath = resolvedPath.split(relativeOutDir).slice(1).join("");
             const newImport = alias + normalizeImportPath(componentFolderPath);
             s.setLiteralValue(newImport);
-          };          
+          }
         };
         handleTraversePath(literal);
       }
@@ -145,7 +145,7 @@ const updateImport = (
         const handleTraversePath = (currentImport: string) => {
           const folderPath = getFolderPath(filePath);
           const fullPath = path.resolve(folderPath, currentImport);
-          if (!fullPath.includes(relativeOutDir) && currentImport.includes("../")) {
+          if (!fullPath.includes(relativeOutDir) && currentImport.startsWith("../")) {
             const traversedPath = currentImport.split(/^..\//).join("");
             // Recusrsively traverse back
             handleTraversePath(traversedPath);

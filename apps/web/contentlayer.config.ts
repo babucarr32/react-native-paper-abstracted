@@ -47,10 +47,8 @@ export default makeSource({
       ],
       () => (tree) => {
         visit(tree, (node) => {
-          console.log("VISITING...");
           if (node?.type === "element" && node?.tagName === "figure") {
             if (!("data-rehype-pretty-code-figure" in node.properties)) {
-              console.log("VISITING... 3");
               return;
             }
 
